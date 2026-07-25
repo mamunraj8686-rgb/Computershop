@@ -4,91 +4,276 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0F4C81">
-    <title>Computer Shop Pro | সবকিছু এক জায়গায়</title>
+    <title>কম্পিউটার দোকান প্রফেশনাল ম্যানেজার</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Roboto,'Noto Sans Bengali',sans-serif; }
-        :root { --primary:#0F4C81; --primary-light:#1A73B9; --accent:#FF9F1C; --success:#2E933C; --danger:#E71D36; --light:#F8FBFE; --dark:#2D3748; --shadow:0 6px 16px rgba(15,76,129,0.12); --radius:14px; }
-        body { background:linear-gradient(180deg,#F0F5FA 0%,#E6EDF7 100%); min-height:100vh; padding:16px; color:var(--dark); }
-        .main-container { max-width:1200px; margin:0 auto; }
-        .brand-header { background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:white; padding:24px; border-radius:var(--radius); text-align:center; margin-bottom:24px; box-shadow:var(--shadow); }
-        .brand-header h1 { font-size:24px; margin-bottom:6px; }
-        .brand-header p { font-size:15px; opacity:0.92; }
-        .main-menu { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:24px; }
-        @media (min-width:600px) { .main-menu { grid-template-columns:repeat(3,1fr); } }
-        @media (min-width:900px) { .main-menu { grid-template-columns:repeat(4,1fr); } }
-        .menu-card { background:white; border-radius:var(--radius); padding:20px 12px; text-align:center; cursor:pointer; transition:all 0.35s ease; border-left:5px solid var(--primary); box-shadow:0 3px 10px rgba(0,0,0,0.05); }
-        .menu-card:hover { transform:translateY(-6px); box-shadow:0 10px 25px rgba(15,76,129,0.18); border-left-color:var(--accent); }
-        .menu-card .icon { font-size:32px; margin-bottom:10px; }
-        .menu-card h3 { font-size:15px; font-weight:600; margin-bottom:4px; }
-        .menu-card p { font-size:12px; color:#718096; }
-        .view-area { background:white; border-radius:var(--radius); padding:28px; box-shadow:var(--shadow); display:none; animation:slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-        .view-area.active { display:block; }
-        .view-area h2 { color:var(--primary); margin-bottom:18px; padding-bottom:10px; border-bottom:2px solid #E2E8F0; }
-        .form-group { margin-bottom:16px; }
-        .form-group label { display:block; font-weight:500; margin-bottom:6px; font-size:14px; }
-        .form-group input, .form-group select, .form-group textarea { width:100%; padding:12px 15px; border:1px solid #CBD5E0; border-radius:10px; font-size:15px; transition:border 0.3s; }
-        .form-group input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 4px rgba(15,76,129,0.1); }
-        .btn { padding:12px 24px; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; transition:0.3s; margin-right:10px; margin-top:8px; }
+        :root {
+            --primary:#0F4C81; --primary-light:#1A73B9; --accent:#FF9F1C;
+            --success:#2E933C; --warning:#F59E0B; --danger:#E71D36; --info:#3B82F6;
+            --light:#F8FBFE; --dark:#2D3748; --border:#E2E8F0; --shadow:0 4px 12px rgba(0,0,0,0.08);
+            --radius:12px; --top-h:60px; --sidebar-w:260px;
+        }
+        body { background:var(--light); color:var(--dark); min-height:100vh; padding-top:var(--top-h); }
+
+        /* টপ নেভিগেশন বার */
+        .top-bar {
+            position:fixed; top:0; left:0; width:100%; height:var(--top-h); background:linear-gradient(135deg,var(--primary),var(--primary-light));
+            color:white; display:flex; align-items:center; justify-content:space-between; padding:0 16px; z-index:999; box-shadow:var(--shadow);
+        }
+        .top-left { display:flex; align-items:center; gap:12px; }
+        .menu-toggle { font-size:22px; cursor:pointer; background:rgba(255,255,255,0.15); padding:6px 10px; border-radius:8px; }
+        .status-indicator { display:flex; align-items:center; gap:6px; font-size:14px; }
+        .status-dot { width:10px; height:10px; border-radius:50%; background:var(--success); animation:pulse 2s infinite; }
+        .status-dot.offline { background:var(--danger); animation:none; }
+        @keyframes pulse { 0% {box-shadow:0 0 0 0 rgba(46,147,60,0.4);} 70% {box-shadow:0 0 0 10px rgba(46,147,60,0);} 100% {box-shadow:0 0 0 0 rgba(46,147,60,0);} }
+        .search-box { flex:1; max-width:450px; margin:0 16px; position:relative; }
+        .search-box input { width:100%; padding:10px 14px 10px 38px; border:none; border-radius:20px; font-size:14px; }
+        .search-box i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94A3B8; }
+        .top-actions { display:flex; align-items:center; gap:12px; font-size:20px; }
+        .action-btn { cursor:pointer; padding:6px; border-radius:50%; transition:0.2s; }
+        .action-btn:hover { background:rgba(255,255,255,0.15); }
+
+        /* সাইডবার */
+        .sidebar {
+            position:fixed; top:var(--top-h); left:-100%; width:var(--sidebar-w); height:calc(100vh - var(--top-h)); background:white;
+            box-shadow:2px 0 10px rgba(0,0,0,0.1); transition:left 0.3s ease; z-index:998; overflow-y:auto;
+        }
+        .sidebar.open { left:0; }
+        .sidebar-nav { padding:16px 0; }
+        .nav-item {
+            display:flex; align-items:center; gap:12px; padding:12px 20px; cursor:pointer; transition:0.2s;
+            border-left:4px solid transparent; font-size:15px; font-weight:500;
+        }
+        .nav-item.active { background:rgba(15,76,129,0.08); border-left-color:var(--primary); color:var(--primary); }
+        .nav-item:hover { background:rgba(15,76,129,0.04); }
+        .sidebar-overlay {
+            position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:997; display:none;
+        }
+        .sidebar.open + .sidebar-overlay { display:block; }
+
+        /* মূল কন্টেন্ট এরিয়া */
+        .main-content { padding:20px; max-width:1200px; margin:0 auto; transition:margin-left 0.3s; }
+        .page { display:none; animation:fadeUp 0.3s ease; }
+        .page.active { display:block; }
+        @keyframes fadeUp { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+        .page-title { font-size:22px; color:var(--primary); margin-bottom:20px; padding-bottom:8px; border-bottom:2px solid var(--border); }
+
+        /* বাটন ও ফর্ম */
+        .btn { padding:10px 18px; border:none; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:6px; }
         .btn-primary { background:var(--primary); color:white; }
         .btn-primary:hover { background:var(--primary-light); }
-        .btn-back { background:#E2E8F0; color:var(--dark); }
-        .btn-back:hover { background:#CBD5E0; }
+        .btn-success { background:var(--success); color:white; }
+        .btn-warning { background:var(--warning); color:white; }
+        .btn-danger { background:var(--danger); color:white; }
+        .btn-outline { background:white; border:1px solid var(--border); color:var(--dark); }
+        .btn-sm { padding:6px 12px; font-size:13px; }
+        .form-group { margin-bottom:14px; }
+        .form-group label { display:block; font-size:14px; font-weight:500; margin-bottom:5px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-size:14px;
+        }
+        .form-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+        .card { background:white; padding:18px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; }
+        .check-item { display:flex; align-items:center; gap:8px; margin:8px 0; cursor:pointer; }
+        .status-badge { padding:4px 10px; border-radius:20px; font-size:12px; font-weight:500; }
+        .badge-yellow { background:#FEF3C7; color:#92400E; }
+        .badge-blue { background:#DBEAFE; color:#1E40AF; }
+        .badge-orange { background:#FFEDD5; color:#9A3412; }
+        .badge-green { background:#D1FAE5; color:#065F46; }
+        .badge-red { background:#FEE2E2; color:#991B1B; }
+
+        /* মোবাইল রেসপন্সিভ */
+        @media (min-width:992px) {
+            .menu-toggle { display:none; }
+            .sidebar { left:0; }
+            .sidebar-overlay { display:none !important; }
+            .main-content { margin-left:var(--sidebar-w); }
+        }
+        @media (max-width:768px) {
+            .search-box { display:none; }
+            .main-content { padding:14px; }
+        }
     </style>
 </head>
 <body>
-<div class="main-container">
-    <div class="brand-header">
-        <h1>💻 কম্পিউটার দোকান প্রফেশনাল ম্যানেজার</h1>
-        <p>মোবাইল • কম্পিউটার • ল্যাপটপ • প্রিন্টার — সম্পূর্ণ ব্যবস্থাপনা</p>
-    </div>
-    <div class="main-menu">
-        <div class="menu-card" onclick="openView('dashboard')">
-            <div class="icon">🏠</div><h3>ড্যাশবোর্ড</h3><p>এক নজরে সবকিছু</p>
+
+<!-- টপ নেভিগেশন বার -->
+<header class="top-bar">
+    <div class="top-left">
+        <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+        <div class="status-indicator">
+            <span class="status-dot" id="netDot"></span>
+            <span id="netText">অনলাইন</span>
         </div>
-        <div class="menu-card" onclick="openView('stock')">
-            <div class="icon">📦</div><h3>স্টক ব্যবস্থাপনা</h3><p>পণ্য যুক্ত/পরিবর্তন</p>
+        <button class="action-btn" title="এখনই সিঙ্ক করুন" onclick="syncData()">🔄</button>
+    </div>
+    <div class="search-box">
+        <i>🔍</i>
+        <input type="text" placeholder="টিকিট আইডি / ফোন নম্বর / সিরিয়াল দিয়ে খুঁজুন...">
+    </div>
+    <div class="top-actions">
+        <div class="action-btn" title="সতর্কবার্তা">🔔</div>
+        <div class="action-btn" title="অ্যাকাউন্ট" onclick="showPage('settings')">👤</div>
+    </div>
+</header>
+
+<!-- সাইডবার -->
+<aside class="sidebar" id="sidebar">
+    <nav class="sidebar-nav">
+        <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">📊 ড্যাশবোর্ড</div>
+        <div class="nav-item" data-page="tickets" onclick="showPage('tickets')">🎟️ মেরামত টিকিট</div>
+        <div class="nav-item" data-page="diagnosis" onclick="showPage('diagnosis')">🧠 স্মার্ট ডায়াগনস্টিক</div>
+        <div class="nav-item" data-page="inventory" onclick="showPage('inventory')">📦 স্টক ও পার্টস</div>
+        <div class="nav-item" data-page="customers" onclick="showPage('customers')">👥 গ্রাহক ও টেকনিশিয়ান</div>
+        <div class="nav-item" data-page="accounts" onclick="showPage('accounts')">💳 হিসাব ও বিলিং</div>
+        <div class="nav-item" data-page="reports" onclick="showPage('reports')">📊 রিপোর্ট</div>
+        <div class="nav-item" data-page="settings" onclick="showPage('settings')">⚙️ সেটিংস ও ব্যাকআপ</div>
+    </nav>
+</aside>
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- মূল কন্টেন্ট -->
+<main class="main-content">
+    <!-- ড্যাশবোর্ড পেজ -->
+    <section id="dashboard" class="page active">
+        <h2 class="page-title">📊 আপনার ড্যাশবোর্ড</h2>
+        <div class="card">
+            <p>স্বাগতম! প্রথম ভার্সনে ড্যাশবোর্ডের সারসংক্ষেপ যুক্ত করা হবে।</p>
+            <br>
+            <div class="form-row">
+                <div class="card" style="margin:0;"><h3>মোট টিকিট</h3><p style="font-size:24px; font-weight:bold;">০</p></div>
+                <div class="card" style="margin:0;"><h3>চলমান কাজ</h3><p style="font-size:24px; font-weight:bold;">০</p></div>
+                <div class="card" style="margin:0;"><h3>আজকের বিক্রয়</h3><p style="font-size:24px; font-weight:bold;">০ টাকা</p></div>
+            </div>
         </div>
-        <div class="menu-card" onclick="openView('repair')">
-            <div class="icon">🔧</div><h3>মেরামত টিকিট</h3><p>সার্ভিস ট্র্যাকিং</p>
+    </section>
+
+    <!-- টিকিট পেজ -->
+    <section id="tickets" class="page">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <h2 class="page-title" style="margin:0;">🎟️ মেরামত টিকিট ব্যবস্থাপনা</h2>
+            <div>
+                <button class="btn btn-primary" onclick="showPage('new-ticket')">➕ নতুন টিকিট</button>
+                <button class="btn btn-outline btn-sm">🖨️ লেবেল প্রিন্ট</button>
+                <button class="btn btn-outline btn-sm">📲 মেসেজ পাঠান</button>
+            </div>
         </div>
-        <div class="menu-card" onclick="openView('billing')">
-            <div class="icon">🧾</div><h3>বিলিং ও বিক্রয়</h3><p>রশিদ ও হিসাব</p>
+        <div class="card">
+            <h4>ফিল্টার করুন:</h4>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
+                <span class="status-badge badge-yellow">জমা নেওয়া হয়েছে</span>
+                <span class="status-badge badge-blue">পরীক্ষা চলছে</span>
+                <span class="status-badge badge-orange">পার্টসের অপেক্ষায়</span>
+                <span class="status-badge badge-green">ডেলিভারির জন্য প্রস্তুত</span>
+                <span class="status-badge" style="background:#D1FAE5; color:#065F46;">ডেলিভারি দেওয়া হয়েছে</span>
+                <span class="status-badge badge-red">বাতিল/মেরামত অসম্ভব</span>
+            </div>
+            <p style="margin-top:16px; color:#64748B;">এখানে টিকিটের তালিকা শীঘ্রই যুক্ত করা হবে।</p>
         </div>
-    </div>
-    <div id="dashboard" class="view-area active">
-        <h2>🏠 আপনার ড্যাশবোর্ড</h2>
-        <p>✅ মোবাইল ও কম্পিউটারে স্বয়ংক্রিয়ভাবে সাজবে</p><br>
-        <p>✅ প্রফেশনাল ও নিরাপদ কাঠামো</p><br>
-        <p>✅ ধাপে ধাপে সব ফিচার যুক্ত করা হবে</p>
-    </div>
-    <div id="stock" class="view-area">
-        <h2>📦 নতুন পণ্য যুক্ত করুন</h2>
-        <div class="form-group"><label>পণ্যের নাম:</label><input type="text" placeholder="যেমন: 19 ইঞ্চি LED মনিটর"></div>
-        <div class="form-group"><label>ব্র্যান্ড ও মডেল:</label><input type="text" placeholder="যেমন: Dell / E1916HV"></div>
-        <div class="form-group"><label>ক্রয়মূল্য (টাকা):</label><input type="number" placeholder="০"></div>
-        <div class="form-group"><label>বিক্রয়মূল্য (টাকা):</label><input type="number" placeholder="০"></div>
-        <div class="form-group"><label>বর্তমান স্টক:</label><input type="number" placeholder="০"></div>
-        <button class="btn btn-primary">সংরক্ষণ করুন</button>
-        <button class="btn btn-back" onclick="backToHome()">ফিরে যান</button>
-    </div>
-    <div id="repair" class="view-area">
-        <h2>🔧 মেরামত টিকিট সিস্টেম</h2>
-        <p>এই অংশটি ধাপে ধাপে যুক্ত করা হবে।</p>
-        <button class="btn btn-back" onclick="backToHome()">ফিরে যান</button>
-    </div>
-    <div id="billing" class="view-area">
-        <h2>🧾 বিলিং ও রশিদ</h2>
-        <p>এই অংশটি ধাপে ধাপে যুক্ত করা হবে।</p>
-        <button class="btn btn-back" onclick="backToHome()">ফিরে যান</button>
-    </div>
-</div>
+    </section>
+
+    <!-- নতুন টিকিট ফর্ম -->
+    <section id="new-ticket" class="page">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="btn btn-outline btn-sm" onclick="showPage('tickets')">← পেছনে</button>
+            <h2 class="page-title" style="margin:0;">📝 নতুন মেরামত টিকিট তৈরি</h2>
+        </div>
+        <div class="card">
+            <h3 style="margin-bottom:12px;">গ্রাহকের তথ্য</h3>
+            <div class="form-row">
+                <div class="form-group"><label>নাম</label><input type="text" placeholder="গ্রাহকের পুরো নাম"></div>
+                <div class="form-group"><label>মোবাইল নম্বর</label><input type="tel" placeholder="01XXXXXXXXX"></div>
+            </div>
+            <div class="form-group"><label>ঠিকানা</label><input type="text" placeholder="বাড়ি-গ্রাম-জেলা"></div>
+
+            <h3 style="margin:20px 0 12px;">ডিভাইসের তথ্য</h3>
+            <div class="form-row">
+                <div class="form-group"><label>পণ্যের ধরন</label><select><option>মোবাইল ফোন</option><option>ল্যাপটপ</option><option>ডেস্কটপ/কম্পিউটার</option><option>প্রিন্টার</option><option>মনিটর</option></select></div>
+                <div class="form-group"><label>ব্র্যান্ড</label><input type="text" placeholder="যেমন: Samsung/HP/Dell"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>মডেল নাম</label><input type="text" placeholder="যেমন: Galaxy A15"></div>
+                <div class="form-group"><label>সিরিয়াল/আইএমইআই</label><input type="text" placeholder="স্ক্যান বা লিখুন"></div>
+            </div>
+
+            <h3 style="margin:20px 0 12px;">সাথে আনা জিনিসপত্র</h3>
+            <div class="check-item"><input type="checkbox" id="acc1"> <label for="acc1">চার্জার/অ্যাডাপ্টার</label></div>
+            <div class="check-item"><input type="checkbox" id="acc2"> <label for="acc2">মেমরি কার্ড</label></div>
+            <div class="check-item"><input type="checkbox" id="acc3"> <label for="acc3">সিম ট্রে</label></div>
+            <div class="check-item"><input type="checkbox" id="acc4"> <label for="acc4">মূল বক্স</label></div>
+
+            <div class="form-group" style="margin-top:20px;"><label>অগ্রিম জমা দেওয়া টাকা</label><input type="number" placeholder="০ টাকা"></div>
+
+            <div style="margin-top:24px; display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-success">💾 সংরক্ষণ ও রশিদ প্রিন্ট</button>
+                <button class="btn btn-outline" onclick="showPage('tickets')">বাতিল করুন</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ডায়াগনস্টিক পেজ -->
+    <section id="diagnosis" class="page">
+        <h2 class="page-title">🧠 স্মার্ট ডায়াগনস্টিক ও সমাধান</h2>
+        <div class="card">
+            <button class="btn btn-primary">📷 ডিভাইসের কিউআর/স্টিকার স্ক্যান করুন</button>
+            <br><br>
+            <h3>সমস্যা নির্বাচন করুন:</h3>
+            <div class="check-item"><input type="checkbox" id="prob1"> <label for="prob1">বিদ্যুৎ আসছে না / সম্পূর্ণ নিষ্ক্রিয়</label></div>
+            <div class="check-item"><input type="checkbox" id="prob2"> <label for="prob2">চার্জিং সমস্যা</label></div>
+            <div class="check-item"><input type="checkbox" id="prob3"> <label for="prob3">ডিসপ্লে ভেঙ্গেছে / ঝলকায়</label></div>
+            <div class="check-item"><input type="checkbox" id="prob4"> <label for="prob4">অতিরিক্ত গরম হয় / দ্রুত চার্জ শেষ হয়</label></div>
+            <br>
+            <button class="btn btn-success">💡 সমাধান দেখুন</button>
+            <button class="btn btn-outline">🔍 সার্কিট ডায়াগ্রাম খুঁজুন</button>
+            <button class="btn btn-warning">➕ প্রয়োজনীয় পার্টস যুক্ত করুন</button>
+        </div>
+    </section>
+
+    <!-- অন্য পেজের কাঠামো -->
+    <section id="inventory" class="page"><h2 class="page-title">📦 স্টক ও পার্টস ব্যবস্থাপনা</h2><div class="card"><button class="btn btn-primary">➕ নতুন পার্টস যুক্ত করুন</button> <button class="btn btn-outline">🏷️ বারকোড তৈরি</button> <button class="btn btn-outline">📉 কম স্টক দেখুন</button> <p style="margin-top:12px;">বিস্তারিত ফাংশন শীঘ্রই যুক্ত করা হবে।</p></div></section>
+    <section id="customers" class="page"><h2 class="page-title">👥 গ্রাহক ও টেকনিশিয়ান</h2><div class="card">এই পেজের ফিচার শীঘ্রই যুক্ত করা হবে।</div></section>
+    <section id="accounts" class="page"><h2 class="page-title">💳 হিসাব-নিকাশ ও বিলিং</h2><div class="card">সার্ভিস চার্জ, ছাড়, পেমেন্ট পদ্ধতি ও প্রিন্টিং অপশন শীঘ্রই যুক্ত করা হবে।</div></section>
+    <section id="reports" class="page"><h2 class="page-title">📊 রিপোর্ট ও বিশ্লেষণ</h2><div class="card">দৈনিক/মাসিক রিপোর্ট শীঘ্রই যুক্ত করা হবে।</div></section>
+    <section id="settings" class="page">
+        <h2 class="page-title">⚙️ সেটিংস ও ব্যাকআপ</h2>
+        <div class="card">
+            <button class="btn btn-outline">💾 লোকাল ফাইলে ব্যাকআপ নিন</button>
+            <button class="btn btn-outline">☁️ ক্লাউডে সিঙ্ক করুন</button>
+            <button class="btn btn-outline">🖨️ প্রিন্টার সেটআপ</button>
+            <div class="form-group" style="margin-top:16px;">
+                <label>ভাষা নির্বাচন</label>
+                <select><option selected>🇧🇩 বাংলা</option><option>🇺🇸 English</option></select>
+            </div>
+        </div>
+    </section>
+</main>
+
 <script>
-function openView(viewId) {
-    document.querySelectorAll('.view-area').forEach(view => view.classList.remove('active'));
-    document.getElementById(viewId).classList.add('active');
+// সাইডবার নিয়ন্ত্রণ
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+// পেজ পরিবর্তন
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+    if(navItem) navItem.classList.add('active');
+    if(window.innerWidth < 992) toggleSidebar();
 }
-function backToHome() { openView('dashboard'); }
+
+// নেটওয়ার্ক স্ট্যাটাস চেক
+function updateNetStatus() {
+    const isOnline = navigator.onLine;
+    document.getElementById('netDot').classList.toggle('offline', !isOnline);
+    document.getElementById('netText').textContent = isOnline ? 'অনলাইন' : 'অফলাইন';
+}
+window.addEventListener('online', updateNetStatus);
+window.addEventListener('offline', updateNetStatus);
+updateNetStatus();
+
+// সিঙ্ক বাটনের কাজ (পরবর্তীতে পূর্ণ করা হবে)
+function syncData() { alert('লোকাল ডাটা ক্লাউডে সিঙ্ক করা হচ্ছে... (এটি প্রথম ভার্সনে প্রস্তুত করা হবে)'); }
 </script>
 </body>
 </html>
