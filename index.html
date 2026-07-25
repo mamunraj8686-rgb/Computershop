@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0F4C81">
     <title>কম্পিউটার ও মোবাইল মেরামত ম্যানেজার</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Roboto,'Noto Sans Bengali',sans-serif; }
         :root {
@@ -66,6 +67,10 @@
         .receipt-preview { display:none; padding:25px; background:white; max-width:320px; margin:0 auto; border:2px dashed #333; }
         .receipt-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; padding:20px; overflow:auto; }
         .receipt-modal.active { display:block; }
+        .scanner-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; padding:20px; }
+        .scanner-modal.active { display:block; }
+        #reader { width:100%; max-width:450px; margin:20px auto; border-radius:var(--radius); overflow:hidden; }
+        .scan-result { margin-top:15px; padding:12px; background:rgba(255,255,255,0.95); border-radius:var(--radius); text-align:center; word-break:break-all; }
         @media print {
             body * { visibility:hidden; }
             .receipt-preview, .receipt-preview * { visibility:visible; position:absolute; left:0; top:0; width:100%; border:none; }
@@ -86,8 +91,7 @@
         </div>
     </div>
     <div class="top-actions">
-        <div class="action-btn">🔔</div>
-        <div class="action-btn">👤</div>
+        <button class="btn btn-sm btn-success" style="background:rgba(255,255,255,0.2); color:white; border:none;" onclick="openScanner()">📲 স্ক্যান</button>
     </div>
 </header>
 
@@ -107,6 +111,14 @@
         <button class="btn btn-success" onclick="printReceipt()">🖨️ প্রিন্ট করুন</button>
         <button class="btn btn-outline" onclick="closeReceipt()">❌ বন্ধ করুন</button>
     </div>
+</div>
+
+<div class="scanner-modal" id="scannerModal">
+    <div style="text-align:right; margin-bottom:10px;">
+        <button class="btn btn-danger" onclick="closeScanner()">✕ বন্ধ করুন</button>
+    </div>
+    <div id="reader"></div>
+    <div class="scan-result" id="scanResult">কোড স্ক্যান করলে এখানে ফলাফল দেখাবে</div>
 </div>
 
 <main class="main-content">
@@ -146,6 +158,13 @@
             <h2 class="page-title">📝 নতুন টিকিট</h2>
         </div>
         <form id="ticketForm" class="card">
+            <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label>পণ্য/ডিভাইস কোড</label>
+                    <button type="button" class="btn btn-sm btn-success" onclick="openScanner()">📲 স্ক্যান করুন</button>
+                </div>
+                <input type="text" id="productCode" placeholder="কোড স্ক্যান করুন বা লিখুন">
+            </div>
             <div class="form-group"><label>গ্রাহকের নাম *</label><input type="text" id="custName" required></div>
             <div class="form-row">
                 <div class="form-group"><label>মোবাইল নম্বর *</label><input type="tel" id="custMobile" required placeholder="01XXXXXXXXX"></div>
@@ -182,6 +201,13 @@
             <h2 class="page-title">➕ নতুন পণ্য যুক্ত</h2>
         </div>
         <form id="stockForm" class="card">
+            <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label>পণ্যের কোড</label>
+                    <button type="button" class="btn btn-sm btn-success" onclick="openScanner()">📲 স্ক্যান করুন</button>
+                </div>
+                <input type="text" id="stockCode" placeholder="কোড স্ক্যান করুন বা লিখুন">
+            </div>
             <div class="form-group"><label>পণ্যের নাম *</label><input type="text" id="itemName" required></div>
             <div class="form-row">
                 <div class="form-group"><label>প্রারম্ভিক পরিমাণ *</label><input type="number" id="itemQty" required min="1"></div>
@@ -203,6 +229,7 @@
 let tickets = JSON.parse(localStorage.getItem('repairTickets')) || [];
 let ticketIdCounter = parseInt(localStorage.getItem('ticketIdCounter')) || 1000;
 let stockItems = JSON.parse(localStorage.getItem('stockItems')) || [];
+let scanner = null;
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 function showPage(pageId) {
@@ -217,11 +244,39 @@ function showPage(pageId) {
     if(pageId === 'inventory') renderStock();
 }
 
+// স্ক্যানার ফাংশন
+function openScanner() {
+    document.getElementById('scannerModal').classList.add('active');
+    document.getElementById('scanResult').textContent = 'কোড স্ক্যান করার জন্য অপেক্ষা করছে...';
+    if(!scanner) {
+        scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+    }
+    scanner.render(onScanSuccess, onScanFailure);
+}
+function closeScanner() {
+    document.getElementById('scannerModal').classList.remove('active');
+    if(scanner) {
+        scanner.clear().catch(err => console.log(err));
+        scanner = null;
+    }
+}
+function onScanSuccess(decodedText) {
+    document.getElementById('scanResult').textContent = `✅ স্ক্যান হয়েছে: ${decodedText}`;
+    if(document.getElementById('productCode')) document.getElementById('productCode').value = decodedText;
+    if(document.getElementById('stockCode')) document.getElementById('stockCode').value = decodedText;
+    alert(`কোড সফলভাবে পাওয়া গেছে: ${decodedText}`);
+    closeScanner();
+}
+function onScanFailure(error) {
+    console.warn(`স্ক্যানার ত্রুটি: ${error}`);
+}
+
 document.getElementById('ticketForm').addEventListener('submit', e => {
     e.preventDefault();
     const t = {
         id: `TKT-${++ticketIdCounter}`,
         date: new Date().toLocaleString('bn-BD'),
+        code: document.getElementById('productCode').value || 'নেই',
         name: document.getElementById('custName').value,
         mobile: document.getElementById('custMobile').value.replace(/\D/g,''),
         advance: document.getElementById('advancePaid').value || 0,
@@ -249,6 +304,7 @@ document.getElementById('stockForm').addEventListener('submit', e => {
     e.preventDefault();
     const item = {
         id: 'STK-' + Date.now(),
+        code: document.getElementById('stockCode').value || 'নেই',
         name: document.getElementById('itemName').value,
         quantity: parseInt(document.getElementById('itemQty').value),
         alertLimit: parseInt(document.getElementById('alertLimit').value),
@@ -293,7 +349,7 @@ function sendWhatsApp(ticketId) {
     const name = t?.name || t?.customer?.name || 'প্রিয় গ্রাহক';
     const deviceText = t?.device || `${t?.deviceInfo?.type || ''} ${t?.deviceInfo?.model || ''}` || 'উল্লেখ নেই';
     if(!t || !mobile || mobile.length < 11) return alert('⚠️ সঠিক মোবাইল নম্বর পাওয়া যায়নি!');
-    const msg = `আসসালামু আলাইকুম ${name}।\nআপনার টিকিট নম্বর: ${t.id}\nডিভাইস: ${deviceText}\nবর্তমান অবস্থা: ${t.status}\nবিস্তারিত জানতে যোগাযোগ করুন। ধন্যবাদ।`;
+    const msg = `আসসালামু আলাইকুম ${name}।\nআপনার টিকিট নম্বর: ${t.id}\nপণ্য কোড: ${t.code || 'নেই'}\nডিভাইস: ${deviceText}\nবর্তমান অবস্থা: ${t.status}\nবিস্তারিত জানতে যোগাযোগ করুন। ধন্যবাদ।`;
     const num = mobile.startsWith('88') ? mobile : '88' + mobile;
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
 }
@@ -302,7 +358,7 @@ function sendSMS(ticketId) {
     const mobile = t?.mobile || t?.customer?.mobile;
     const deviceText = t?.device || `${t?.deviceInfo?.type || ''} ${t?.deviceInfo?.model || ''}` || 'উল্লেখ নেই';
     if(!t || !mobile || mobile.length < 11) return alert('⚠️ সঠিক মোবাইল নম্বর পাওয়া যায়নি!');
-    const msg = `আপনার টিকিট ${t.id} এর অবস্থা: ${t.status}. ডিভাইস: ${deviceText}`;
+    const msg = `আপনার টিকিট ${t.id} এর অবস্থা: ${t.status}. কোড: ${t.code || 'নেই'}, ডিভাইস: ${deviceText}`;
     window.open(`sms:${mobile}?body=${encodeURIComponent(msg)}`, '_blank');
 }
 
@@ -319,6 +375,7 @@ function renderTickets(filter='সব') {
                 <span class="status-badge ${getStatusColor(t.status)}">${t.status}</span>
             </div>
             <div style="margin:8px 0; font-size:14px;">
+                কোড: ${t.code || 'নেই'}<br>
                 নাম: ${showName} • ফোন: ${showMobile}<br>
                 ডিভাইস: ${showDevice}<br>
                 সমস্যা: ${t.problem || 'উল্লেখ নেই'} • অগ্রিম: ${t.advance || 0} টাকা
@@ -345,7 +402,7 @@ function renderStock() {
                 <strong>${i.name}</strong>
                 <span class="stock-qty ${i.quantity <= i.alertLimit ? 'badge-low' : ''}">পরিমাণ: ${i.quantity} টি</span>
             </div>
-            <div style="font-size:14px; margin:8px 0;">ক্রয়: ${i.buyPrice} টাকা • বিক্রয়: ${i.sellPrice} টাকা • সতর্কতা: ${i.alertLimit} টি</div>
+            <div style="font-size:14px; margin:8px 0;">কোড: ${i.code || 'নেই'} • ক্রয়: ${i.buyPrice} টাকা • বিক্রয়: ${i.sellPrice} টাকা • সতর্কতা: ${i.alertLimit} টি</div>
             <div class="stock-actions">
                 <button class="btn btn-sm btn-success" onclick="updateStockQty('${i.id}',1)">+১ যুক্ত</button>
                 <button class="btn btn-sm btn-warning" onclick="updateStockQty('${i.id}',-1)">-১ বিয়োগ</button>
@@ -385,6 +442,7 @@ function openReceipt(id) {
         </div>
         <div style="font-size:13px; line-height:1.8; margin:15px 0;">
             <p><strong>টিকিট:</strong> ${t.id}</p><p><strong>তারিখ:</strong> ${t.date}</p>
+            <p><strong>পণ্য কোড:</strong> ${t.code || 'নেই'}</p>
             <p><strong>গ্রাহক:</strong> ${showName}</p><p><strong>ফোন:</strong> ${showMobile}</p>
             <p><strong>ডিভাইস:</strong> ${showDevice}</p><p><strong>সমস্যা:</strong> ${t.problem || 'উল্লেখ নেই'}</p>
             <p><strong>অগ্রিম জমা:</strong> ${t.advance || 0} টাকা</p><p><strong>বর্তমান অবস্থা:</strong> ${t.status}</p>
