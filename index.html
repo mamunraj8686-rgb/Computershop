@@ -81,6 +81,14 @@
         .badge-orange { background:#FFEDD5; color:#9A3412; }
         .badge-green { background:#D1FAE5; color:#065F46; }
         .badge-red { background:#FEE2E2; color:#991B1B; }
+        .badge-gray { background:#F3F4F6; color:#374151; }
+
+        /* টিকিট কার্ড */
+        .ticket-card { border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; background:white; }
+        .ticket-header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+        .ticket-id { font-weight:bold; color:var(--primary); font-size:15px; }
+        .ticket-details { font-size:14px; color:#4B5563; line-height:1.6; }
+        .ticket-actions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
 
         /* মোবাইল রেসপন্সিভ */
         @media (min-width:992px) {
@@ -109,7 +117,7 @@
     </div>
     <div class="search-box">
         <i>🔍</i>
-        <input type="text" placeholder="টিকিট আইডি / ফোন নম্বর / সিরিয়াল দিয়ে খুঁজুন...">
+        <input type="text" id="searchInput" placeholder="টিকিট আইডি / ফোন নম্বর / সিরিয়াল দিয়ে খুঁজুন...">
     </div>
     <div class="top-actions">
         <div class="action-btn" title="সতর্কবার্তা">🔔</div>
@@ -136,14 +144,16 @@
 <main class="main-content">
     <!-- ড্যাশবোর্ড পেজ -->
     <section id="dashboard" class="page active">
-        <h2 class="page-title">📊 আপনার ড্যাশবোর্ড</h2>
-        <div class="card">
-            <p>স্বাগতম! প্রথম ভার্সনে ড্যাশবোর্ডের সারসংক্ষেপ যুক্ত করা হবে।</p>
-            <br>
-            <div class="form-row">
-                <div class="card" style="margin:0;"><h3>মোট টিকিট</h3><p style="font-size:24px; font-weight:bold;">০</p></div>
-                <div class="card" style="margin:0;"><h3>চলমান কাজ</h3><p style="font-size:24px; font-weight:bold;">০</p></div>
-                <div class="card" style="margin:0;"><h3>আজকের বিক্রয়</h3><p style="font-size:24px; font-weight:bold;">০ টাকা</p></div>
+        <h2 class="page-title">🏠 আপনার ড্যাশবোর্ড</h2>
+        <div class="form-row">
+            <div class="card" style="margin:0;"><h3>মোট টিকিট</h3><p style="font-size:28px; font-weight:bold; color:var(--primary);" id="totalTickets">0</p></div>
+            <div class="card" style="margin:0;"><h3>চলমান কাজ</h3><p style="font-size:28px; font-weight:bold; color:var(--warning);" id="activeTickets">0</p></div>
+            <div class="card" style="margin:0;"><h3>ডেলিভারি দেওয়া হয়েছে</h3><p style="font-size:28px; font-weight:bold; color:var(--success);" id="deliveredTickets">0</p></div>
+        </div>
+        <div class="card" style="margin-top:20px;">
+            <h3>সাম্প্রতিক টিকিট</h3>
+            <div id="recentTicketsList" style="margin-top:12px;">
+                <p style="color:#6B7280;">এখনো কোনো টিকিট তৈরি করা হয়নি।</p>
             </div>
         </div>
     </section>
@@ -161,14 +171,20 @@
         <div class="card">
             <h4>ফিল্টার করুন:</h4>
             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
-                <span class="status-badge badge-yellow">জমা নেওয়া হয়েছে</span>
-                <span class="status-badge badge-blue">পরীক্ষা চলছে</span>
-                <span class="status-badge badge-orange">পার্টসের অপেক্ষায়</span>
-                <span class="status-badge badge-green">ডেলিভারির জন্য প্রস্তুত</span>
-                <span class="status-badge" style="background:#D1FAE5; color:#065F46;">ডেলিভারি দেওয়া হয়েছে</span>
-                <span class="status-badge badge-red">বাতিল/মেরামত অসম্ভব</span>
+                <span class="status-badge badge-yellow filter-btn" data-filter="Received">জমা নেওয়া হয়েছে</span>
+                <span class="status-badge badge-blue filter-btn" data-filter="Diagnosing">পরীক্ষা চলছে</span>
+                <span class="status-badge badge-orange filter-btn" data-filter="Waiting">পার্টসের অপেক্ষায়</span>
+                <span class="status-badge badge-green filter-btn" data-filter="Ready">ডেলিভারির জন্য প্রস্তুত</span>
+                <span class="status-badge filter-btn badge-gray" data-filter="Delivered">ডেলিভারি দেওয়া হয়েছে</span>
+                <span class="status-badge badge-red filter-btn" data-filter="Cancelled">বাতিল/মেরামত অসম্ভব</span>
+                <span class="status-badge filter-btn" data-filter="All" style="background:#E0E7FF; color:#3730A3;">সব দেখুন</span>
             </div>
-            <p style="margin-top:16px; color:#64748B;">এখানে টিকিটের তালিকা শীঘ্রই যুক্ত করা হবে।</p>
+        </div>
+        <div id="ticketsList">
+            <div class="card" style="text-align:center; color:#6B7280;">
+                <p>এখনো কোনো টিকিট তৈরি করা হয়নি।</p>
+                <button class="btn btn-sm btn-primary" onclick="showPage('new-ticket')" style="margin-top:10px;">প্রথম টিকিট তৈরি করুন</button>
+            </div>
         </div>
     </section>
 
@@ -178,77 +194,64 @@
             <button class="btn btn-outline btn-sm" onclick="showPage('tickets')">← পেছনে</button>
             <h2 class="page-title" style="margin:0;">📝 নতুন মেরামত টিকিট তৈরি</h2>
         </div>
-        <div class="card">
+        <form id="ticketForm" class="card">
             <h3 style="margin-bottom:12px;">গ্রাহকের তথ্য</h3>
             <div class="form-row">
-                <div class="form-group"><label>নাম</label><input type="text" placeholder="গ্রাহকের পুরো নাম"></div>
-                <div class="form-group"><label>মোবাইল নম্বর</label><input type="tel" placeholder="01XXXXXXXXX"></div>
+                <div class="form-group"><label>গ্রাহকের নাম *</label><input type="text" id="custName" required placeholder="পুরো নাম লিখুন"></div>
+                <div class="form-group"><label>মোবাইল নম্বর *</label><input type="tel" id="custMobile" required placeholder="01XXXXXXXXX"></div>
             </div>
-            <div class="form-group"><label>ঠিকানা</label><input type="text" placeholder="বাড়ি-গ্রাম-জেলা"></div>
+            <div class="form-group"><label>ঠিকানা</label><input type="text" id="custAddress" placeholder="বাড়ি-গ্রাম-জেলা"></div>
 
             <h3 style="margin:20px 0 12px;">ডিভাইসের তথ্য</h3>
             <div class="form-row">
-                <div class="form-group"><label>পণ্যের ধরন</label><select><option>মোবাইল ফোন</option><option>ল্যাপটপ</option><option>ডেস্কটপ/কম্পিউটার</option><option>প্রিন্টার</option><option>মনিটর</option></select></div>
-                <div class="form-group"><label>ব্র্যান্ড</label><input type="text" placeholder="যেমন: Samsung/HP/Dell"></div>
+                <div class="form-group"><label>পণ্যের ধরন *</label>
+                    <select id="deviceType" required>
+                        <option value="">নির্বাচন করুন</option>
+                        <option>মোবাইল ফোন</option>
+                        <option>ল্যাপটপ</option>
+                        <option>ডেস্কটপ/কম্পিউটার</option>
+                        <option>প্রিন্টার</option>
+                        <option>মনিটর</option>
+                        <option>অন্যান্য</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>ব্র্যান্ড</label><input type="text" id="deviceBrand" placeholder="যেমন: Samsung/HP/Dell"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>মডেল নাম</label><input type="text" placeholder="যেমন: Galaxy A15"></div>
-                <div class="form-group"><label>সিরিয়াল/আইএমইআই</label><input type="text" placeholder="স্ক্যান বা লিখুন"></div>
+                <div class="form-group"><label>মডেল নাম</label><input type="text" id="deviceModel" placeholder="যেমন: Galaxy A15"></div>
+                <div class="form-group"><label>সিরিয়াল/আইএমইআই</label><input type="text" id="deviceSerial" placeholder="স্ক্যান বা লিখুন"></div>
             </div>
 
             <h3 style="margin:20px 0 12px;">সাথে আনা জিনিসপত্র</h3>
-            <div class="check-item"><input type="checkbox" id="acc1"> <label for="acc1">চার্জার/অ্যাডাপ্টার</label></div>
-            <div class="check-item"><input type="checkbox" id="acc2"> <label for="acc2">মেমরি কার্ড</label></div>
-            <div class="check-item"><input type="checkbox" id="acc3"> <label for="acc3">সিম ট্রে</label></div>
-            <div class="check-item"><input type="checkbox" id="acc4"> <label for="acc4">মূল বক্স</label></div>
+            <div class="check-item"><input type="checkbox" id="acc1" value="চার্জার"> <label for="acc1">চার্জার/অ্যাডাপ্টার</label></div>
+            <div class="check-item"><input type="checkbox" id="acc2" value="মেমরি কার্ড"> <label for="acc2">মেমরি কার্ড</label></div>
+            <div class="check-item"><input type="checkbox" id="acc3" value="সিম ট্রে"> <label for="acc3">সিম ট্রে</label></div>
+            <div class="check-item"><input type="checkbox" id="acc4" value="মূল বক্স"> <label for="acc4">মূল বক্স</label></div>
 
-            <div class="form-group" style="margin-top:20px;"><label>অগ্রিম জমা দেওয়া টাকা</label><input type="number" placeholder="০ টাকা"></div>
+            <div class="form-group" style="margin-top:20px;"><label>অগ্রিম জমা দেওয়া টাকা (টাকা)</label><input type="number" id="advancePaid" value="0" min="0" placeholder="০"></div>
+            <div class="form-group"><label>সমস্যার বিবরণ</label><textarea id="problemDesc" rows="3" placeholder="ডিভাইসের সমস্যা বিস্তারিত লিখুন..."></textarea></div>
 
             <div style="margin-top:24px; display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn btn-success">💾 সংরক্ষণ ও রশিদ প্রিন্ট</button>
-                <button class="btn btn-outline" onclick="showPage('tickets')">বাতিল করুন</button>
+                <button type="submit" class="btn btn-success">💾 সংরক্ষণ করুন</button>
+                <button type="button" class="btn btn-outline" onclick="showPage('tickets')">বাতিল করুন</button>
             </div>
-        </div>
-    </section>
-
-    <!-- ডায়াগনস্টিক পেজ -->
-    <section id="diagnosis" class="page">
-        <h2 class="page-title">🧠 স্মার্ট ডায়াগনস্টিক ও সমাধান</h2>
-        <div class="card">
-            <button class="btn btn-primary">📷 ডিভাইসের কিউআর/স্টিকার স্ক্যান করুন</button>
-            <br><br>
-            <h3>সমস্যা নির্বাচন করুন:</h3>
-            <div class="check-item"><input type="checkbox" id="prob1"> <label for="prob1">বিদ্যুৎ আসছে না / সম্পূর্ণ নিষ্ক্রিয়</label></div>
-            <div class="check-item"><input type="checkbox" id="prob2"> <label for="prob2">চার্জিং সমস্যা</label></div>
-            <div class="check-item"><input type="checkbox" id="prob3"> <label for="prob3">ডিসপ্লে ভেঙ্গেছে / ঝলকায়</label></div>
-            <div class="check-item"><input type="checkbox" id="prob4"> <label for="prob4">অতিরিক্ত গরম হয় / দ্রুত চার্জ শেষ হয়</label></div>
-            <br>
-            <button class="btn btn-success">💡 সমাধান দেখুন</button>
-            <button class="btn btn-outline">🔍 সার্কিট ডায়াগ্রাম খুঁজুন</button>
-            <button class="btn btn-warning">➕ প্রয়োজনীয় পার্টস যুক্ত করুন</button>
-        </div>
+        </form>
     </section>
 
     <!-- অন্য পেজের কাঠামো -->
-    <section id="inventory" class="page"><h2 class="page-title">📦 স্টক ও পার্টস ব্যবস্থাপনা</h2><div class="card"><button class="btn btn-primary">➕ নতুন পার্টস যুক্ত করুন</button> <button class="btn btn-outline">🏷️ বারকোড তৈরি</button> <button class="btn btn-outline">📉 কম স্টক দেখুন</button> <p style="margin-top:12px;">বিস্তারিত ফাংশন শীঘ্রই যুক্ত করা হবে।</p></div></section>
-    <section id="customers" class="page"><h2 class="page-title">👥 গ্রাহক ও টেকনিশিয়ান</h2><div class="card">এই পেজের ফিচার শীঘ্রই যুক্ত করা হবে।</div></section>
-    <section id="accounts" class="page"><h2 class="page-title">💳 হিসাব-নিকাশ ও বিলিং</h2><div class="card">সার্ভিস চার্জ, ছাড়, পেমেন্ট পদ্ধতি ও প্রিন্টিং অপশন শীঘ্রই যুক্ত করা হবে।</div></section>
-    <section id="reports" class="page"><h2 class="page-title">📊 রিপোর্ট ও বিশ্লেষণ</h2><div class="card">দৈনিক/মাসিক রিপোর্ট শীঘ্রই যুক্ত করা হবে।</div></section>
-    <section id="settings" class="page">
-        <h2 class="page-title">⚙️ সেটিংস ও ব্যাকআপ</h2>
-        <div class="card">
-            <button class="btn btn-outline">💾 লোকাল ফাইলে ব্যাকআপ নিন</button>
-            <button class="btn btn-outline">☁️ ক্লাউডে সিঙ্ক করুন</button>
-            <button class="btn btn-outline">🖨️ প্রিন্টার সেটআপ</button>
-            <div class="form-group" style="margin-top:16px;">
-                <label>ভাষা নির্বাচন</label>
-                <select><option selected>🇧🇩 বাংলা</option><option>🇺🇸 English</option></select>
-            </div>
-        </div>
-    </section>
+    <section id="diagnosis" class="page"><h2 class="page-title">🧠 স্মার্ট ডায়াগনস্টিক ও সমাধান</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
+    <section id="inventory" class="page"><h2 class="page-title">📦 স্টক ও পার্টস ব্যবস্থাপনা</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
+    <section id="customers" class="page"><h2 class="page-title">👥 গ্রাহক ও টেকনিশিয়ান</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
+    <section id="accounts" class="page"><h2 class="page-title">💳 হিসাব-নিকাশ ও বিলিং</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
+    <section id="reports" class="page"><h2 class="page-title">📊 রিপোর্ট ও বিশ্লেষণ</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
+    <section id="settings" class="page"><h2 class="page-title">⚙️ সেটিংস ও ব্যাকআপ</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
 </main>
 
 <script>
+// স্থানীয় স্টোরেজ থেকে ডাটা লোড
+let tickets = JSON.parse(localStorage.getItem('repairTickets')) || [];
+let ticketIdCounter = parseInt(localStorage.getItem('ticketIdCounter')) || 1000;
+
 // সাইডবার নিয়ন্ত্রণ
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
@@ -260,7 +263,138 @@ function showPage(pageId) {
     const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if(navItem) navItem.classList.add('active');
     if(window.innerWidth < 992) toggleSidebar();
+    
+    if(pageId === 'dashboard') updateDashboard();
+    if(pageId === 'tickets') renderTickets();
 }
+
+// নতুন টিকিট ফর্ম জমা দেওয়া
+document.getElementById('ticketForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const accessories = [];
+    document.querySelectorAll('[id^="acc"]:checked').forEach(cb => accessories.push(cb.value));
+    
+    const newTicket = {
+        id: `TKT-${++ticketIdCounter}`,
+        date: new Date().toLocaleString('bn-BD'),
+        customer: {
+            name: document.getElementById('custName').value,
+            mobile: document.getElementById('custMobile').value,
+            address: document.getElementById('custAddress').value
+        },
+        device: {
+            type: document.getElementById('deviceType').value,
+            brand: document.getElementById('deviceBrand').value,
+            model: document.getElementById('deviceModel').value,
+            serial: document.getElementById('deviceSerial').value
+        },
+        accessories: accessories,
+        advance: document.getElementById('advancePaid').value || 0,
+        problem: document.getElementById('problemDesc').value,
+        status: 'Received'
+    };
+    
+    tickets.unshift(newTicket);
+    localStorage.setItem('repairTickets', JSON.stringify(tickets));
+    localStorage.setItem('ticketIdCounter', ticketIdCounter);
+    
+    alert(`✅ নতুন টিকিট তৈরি হয়েছে! টিকিট নম্বর: ${newTicket.id}`);
+    this.reset();
+    showPage('tickets');
+});
+
+// ড্যাশবোর্ড আপডেট
+function updateDashboard() {
+    document.getElementById('totalTickets').textContent = tickets.length;
+    const active = tickets.filter(t => !['Delivered','Cancelled'].includes(t.status)).length;
+    document.getElementById('activeTickets').textContent = active;
+    const delivered = tickets.filter(t => t.status === 'Delivered').length;
+    document.getElementById('deliveredTickets').textContent = delivered;
+    
+    const recent = tickets.slice(0,3);
+    const listHtml = recent.length ? recent.map(t => `
+        <div class="ticket-card" style="margin:8px 0;">
+            <div class="ticket-header">
+                <span class="ticket-id">${t.id}</span>
+                <span class="status-badge ${getStatusClass(t.status)}">${getStatusText(t.status)}</span>
+            </div>
+            <div class="ticket-details">
+                গ্রাহক: ${t.customer.name} | ফোন: ${t.customer.mobile}<br>
+                ডিভাইস: ${t.device.type} - ${t.device.brand || 'ব্র্যান্ড নেই'} ${t.device.model || ''}
+            </div>
+        </div>
+    `).join('') : '<p style="color:#6B7280;">এখনো কোনো টিকিট তৈরি করা হয়নি।</p>';
+    document.getElementById('recentTicketsList').innerHTML = listHtml;
+}
+
+// টিকিট রেন্ডার করা
+function renderTickets(filter = 'All') {
+    let filtered = filter === 'All' ? tickets : tickets.filter(t => t.status === filter);
+    const listHtml = filtered.length ? filtered.map(t => `
+        <div class="ticket-card">
+            <div class="ticket-header">
+                <span class="ticket-id">${t.id} • ${t.date}</span>
+                <span class="status-badge ${getStatusClass(t.status)}">${getStatusText(t.status)}</span>
+            </div>
+            <div class="ticket-details">
+                <strong>গ্রাহক:</strong> ${t.customer.name} | ফোন: ${t.customer.mobile}<br>
+                <strong>ডিভাইস:</strong> ${t.device.type} ${t.device.brand ? `- ${t.device.brand}` : ''} ${t.device.model || ''}<br>
+                ${t.device.serial ? `<strong>সিরিয়াল:</strong> ${t.device.serial}<br>` : ''}
+                <strong>আনা জিনিস:</strong> ${t.accessories.join(', ') || 'কিছুই নয়'}<br>
+                <strong>অগ্রিম জমা:</strong> ${t.advance} টাকা
+                ${t.problem ? `<br><strong>সমস্যা:</strong> ${t.problem}` : ''}
+            </div>
+            <div class="ticket-actions">
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','Received')">জমা নেওয়া</button>
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','Diagnosing')">পরীক্ষা করা</button>
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','Waiting')">পার্টসের অপেক্ষা</button>
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','Ready')">প্রস্তুত করা</button>
+                <button class="btn btn-sm btn-success" onclick="changeStatus('${t.id}','Delivered')">ডেলিভারি দেওয়া</button>
+                <button class="btn btn-sm btn-danger" onclick="changeStatus('${t.id}','Cancelled')">বাতিল</button>
+            </div>
+        </div>
+    `).join('') : `
+        <div class="card" style="text-align:center; color:#6B7280;">
+            <p>এই ফিল্টারে কোনো টিকিট পাওয়া যায়নি।</p>
+            <button class="btn btn-sm btn-primary" onclick="showPage('new-ticket')" style="margin-top:10px;">নতুন টিকিট তৈরি করুন</button>
+        </div>
+    `;
+    document.getElementById('ticketsList').innerHTML = listHtml;
+}
+
+// স্ট্যাটাসের ক্লাস ও বাংলা নাম
+function getStatusClass(status) {
+    const map = {
+        'Received':'badge-yellow','Diagnosing':'badge-blue','Waiting':'badge-orange',
+        'Ready':'badge-green','Delivered':'badge-gray','Cancelled':'badge-red'
+    };
+    return map[status] || 'badge-gray';
+}
+function getStatusText(status) {
+    const map = {
+        'Received':'জমা নেওয়া হয়েছে','Diagnosing':'পরীক্ষা করা হচ্ছে','Waiting':'পার্টসের অপেক্ষায়',
+        'Ready':'ডেলিভারির জন্য প্রস্তুত','Delivered':'ডেলিভারি দেওয়া হয়েছে','Cancelled':'বাতিল/মেরামত অসম্ভব'
+    };
+    return map[status] || status;
+}
+
+// স্ট্যাটাস পরিবর্তন
+function changeStatus(ticketId, newStatus) {
+    const idx = tickets.findIndex(t => t.id === ticketId);
+    if(idx > -1) {
+        tickets[idx].status = newStatus;
+        localStorage.setItem('repairTickets', JSON.stringify(tickets));
+        renderTickets();
+        updateDashboard();
+        alert(`✅ টিকিটের স্ট্যাটাস পরিবর্তন হয়ে গেল: ${getStatusText(newStatus)}`);
+    }
+}
+
+// ফিল্টার বাটন কাজ
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => renderTickets(btn.dataset.filter));
+});
 
 // নেটওয়ার্ক স্ট্যাটাস চেক
 function updateNetStatus() {
@@ -272,8 +406,13 @@ window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 updateNetStatus();
 
-// সিঙ্ক বাটনের কাজ (পরবর্তীতে পূর্ণ করা হবে)
-function syncData() { alert('লোকাল ডাটা ক্লাউডে সিঙ্ক করা হচ্ছে... (এটি প্রথম ভার্সনে প্রস্তুত করা হবে)'); }
+// সিঙ্ক বাটন
+function syncData() {
+    alert('✅ আপনার সব টিকিট স্থানীয়ভাবে সংরক্ষিত আছে। পরবর্তীতে ক্লাউড সিঙ্ক যুক্ত করা হবে।');
+}
+
+// প্রথমবার লোড হলে ড্যাশবোর্ড আপডেট
+updateDashboard();
 </script>
 </body>
 </html>
