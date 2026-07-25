@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0F4C81">
-    <title>কম্পিউটার দোকান প্রফেশনাল ম্যানেজার</title>
+    <title>কম্পিউটার ও মোবাইল মেরামত স্টক ও টিকিট ম্যানেজার</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Roboto,'Noto Sans Bengali',sans-serif; }
         :root {
@@ -26,9 +26,6 @@
         .status-dot { width:10px; height:10px; border-radius:50%; background:var(--success); animation:pulse 2s infinite; }
         .status-dot.offline { background:var(--danger); animation:none; }
         @keyframes pulse { 0% {box-shadow:0 0 0 0 rgba(46,147,60,0.4);} 70% {box-shadow:0 0 0 10px rgba(46,147,60,0);} 100% {box-shadow:0 0 0 0 rgba(46,147,60,0);} }
-        .search-box { flex:1; max-width:450px; margin:0 16px; position:relative; }
-        .search-box input { width:100%; padding:10px 14px 10px 38px; border:none; border-radius:20px; font-size:14px; }
-        .search-box i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94A3B8; }
         .top-actions { display:flex; align-items:center; gap:12px; font-size:20px; }
         .action-btn { cursor:pointer; padding:6px; border-radius:50%; transition:0.2s; }
         .action-btn:hover { background:rgba(255,255,255,0.15); }
@@ -51,7 +48,7 @@
         }
         .sidebar.open + .sidebar-overlay { display:block; }
 
-        /* মূল কন্টেন্ট এরিয়া */
+        /* মূল কন্টেন্ট */
         .main-content { padding:20px; max-width:1200px; margin:0 auto; transition:margin-left 0.3s; }
         .page { display:none; animation:fadeUp 0.3s ease; }
         .page.active { display:block; }
@@ -82,6 +79,7 @@
         .badge-green { background:#D1FAE5; color:#065F46; }
         .badge-red { background:#FEE2E2; color:#991B1B; }
         .badge-gray { background:#F3F4F6; color:#374151; }
+        .badge-low { background:#FEE2E2; color:#991B1B; font-weight:bold; }
 
         /* টিকিট কার্ড */
         .ticket-card { border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; background:white; }
@@ -90,7 +88,15 @@
         .ticket-details { font-size:14px; color:#4B5563; line-height:1.6; }
         .ticket-actions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
 
-        /* প্রিন্টযোগ্য রশিদ */
+        /* স্টক কার্ড */
+        .stock-card { border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; background:white; }
+        .stock-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+        .stock-name { font-weight:bold; color:var(--primary); font-size:16px; }
+        .stock-qty { font-size:15px; font-weight:bold; }
+        .stock-details { font-size:14px; color:#4B5563; line-height:1.6; margin-bottom:10px; }
+        .stock-actions { display:flex; gap:8px; flex-wrap:wrap; }
+
+        /* রশিদ ও প্রিন্ট */
         .receipt-preview { display:none; padding:25px; background:white; max-width:320px; margin:0 auto; border:2px dashed #333; }
         .receipt-head { text-align:center; margin-bottom:15px; border-bottom:1px dashed #333; padding-bottom:10px; }
         .receipt-head h3 { font-size:18px; color:var(--primary); }
@@ -100,8 +106,6 @@
         .receipt-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow:auto; padding:20px; }
         .receipt-modal.active { display:block; }
         .receipt-buttons { text-align:center; margin:15px 0; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
-
-        /* প্রিন্টের সময় শুধু রশিদ দেখাবে */
         @media print {
             body * { visibility:hidden; }
             .receipt-preview, .receipt-preview * { visibility:visible; }
@@ -109,7 +113,7 @@
             .receipt-modal, .receipt-buttons { display:none !important; }
         }
 
-        /* মোবাইল রেসপন্সিভ */
+        /* রেসপন্সিভ */
         @media (min-width:992px) {
             .menu-toggle { display:none; }
             .sidebar { left:0; }
@@ -117,14 +121,13 @@
             .main-content { margin-left:var(--sidebar-w); }
         }
         @media (max-width:768px) {
-            .search-box { display:none; }
             .main-content { padding:14px; }
         }
     </style>
 </head>
 <body>
 
-<!-- টপ নেভিগেশন বার -->
+<!-- টপ বার -->
 <header class="top-bar">
     <div class="top-left">
         <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
@@ -132,34 +135,26 @@
             <span class="status-dot" id="netDot"></span>
             <span id="netText">অনলাইন</span>
         </div>
-        <button class="action-btn" title="এখনই সিঙ্ক করুন" onclick="syncData()">🔄</button>
-    </div>
-    <div class="search-box">
-        <i>🔍</i>
-        <input type="text" id="searchInput" placeholder="টিকিট আইডি / ফোন নম্বর / সিরিয়াল দিয়ে খুঁজুন...">
     </div>
     <div class="top-actions">
-        <div class="action-btn" title="সতর্কবার্তা">🔔</div>
-        <div class="action-btn" title="অ্যাকাউন্ট" onclick="showPage('settings')">👤</div>
+        <div class="action-btn" title="সহায়তা">❓</div>
+        <div class="action-btn" title="ব্যবহারকারী">👤</div>
     </div>
 </header>
 
 <!-- সাইডবার -->
 <aside class="sidebar" id="sidebar">
     <nav class="sidebar-nav">
-        <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">📊 ড্যাশবোর্ড</div>
+        <div class="nav-item" data-page="dashboard" onclick="showPage('dashboard')">📊 ড্যাশবোর্ড</div>
         <div class="nav-item" data-page="tickets" onclick="showPage('tickets')">🎟️ মেরামত টিকিট</div>
-        <div class="nav-item" data-page="diagnosis" onclick="showPage('diagnosis')">🧠 স্মার্ট ডায়াগনস্টিক</div>
-        <div class="nav-item" data-page="inventory" onclick="showPage('inventory')">📦 স্টক ও পার্টস</div>
-        <div class="nav-item" data-page="customers" onclick="showPage('customers')">👥 গ্রাহক ও টেকনিশিয়ান</div>
-        <div class="nav-item" data-page="accounts" onclick="showPage('accounts')">💳 হিসাব ও বিলিং</div>
-        <div class="nav-item" data-page="reports" onclick="showPage('reports')">📊 রিপোর্ট</div>
-        <div class="nav-item" data-page="settings" onclick="showPage('settings')">⚙️ সেটিংস ও ব্যাকআপ</div>
+        <div class="nav-item active" data-page="inventory" onclick="showPage('inventory')">📦 স্টক ও পার্টস</div>
+        <div class="nav-item" data-page="add-stock" onclick="showPage('add-stock')">➕ নতুন পণ্য যুক্ত</div>
+        <div class="nav-item" data-page="settings" onclick="showPage('settings')">⚙️ সেটিংস</div>
     </nav>
 </aside>
 <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-<!-- রশিদ প্রিভিউ মোডাল -->
+<!-- রশিদ মোডাল -->
 <div class="receipt-modal" id="receiptModal">
     <div class="receipt-preview" id="receiptContent"></div>
     <div class="receipt-buttons">
@@ -170,31 +165,22 @@
 
 <!-- মূল কন্টেন্ট -->
 <main class="main-content">
-    <!-- ড্যাশবোর্ড পেজ -->
-    <section id="dashboard" class="page active">
-        <h2 class="page-title">🏠 আপনার ড্যাশবোর্ড</h2>
+    <!-- ড্যাশবোর্ড -->
+    <section id="dashboard" class="page">
+        <h2 class="page-title">🏠 ড্যাশবোর্ড</h2>
         <div class="form-row">
-            <div class="card" style="margin:0;"><h3>মোট টিকিট</h3><p style="font-size:28px; font-weight:bold; color:var(--primary);" id="totalTickets">0</p></div>
-            <div class="card" style="margin:0;"><h3>চলমান কাজ</h3><p style="font-size:28px; font-weight:bold; color:var(--warning);" id="activeTickets">0</p></div>
-            <div class="card" style="margin:0;"><h3>ডেলিভারি দেওয়া হয়েছে</h3><p style="font-size:28px; font-weight:bold; color:var(--success);" id="deliveredTickets">0</p></div>
-        </div>
-        <div class="card" style="margin-top:20px;">
-            <h3>সাম্প্রতিক টিকিট</h3>
-            <div id="recentTicketsList" style="margin-top:12px;">
-                <p style="color:#6B7280;">এখনো কোনো টিকিট তৈরি করা হয়নি।</p>
-            </div>
+            <div class="card"><h3>মোট টিকিট</h3><p style="font-size:28px; font-weight:bold; color:var(--primary);" id="totalTickets">0</p></div>
+            <div class="card"><h3>চলমান কাজ</h3><p style="font-size:28px; font-weight:bold; color:var(--warning);" id="activeTickets">0</p></div>
+            <div class="card"><h3>মোট পণ্য</h3><p style="font-size:28px; font-weight:bold; color:var(--success);" id="totalStock">0</p></div>
+            <div class="card"><h3>কম স্টক</h3><p style="font-size:28px; font-weight:bold; color:var(--danger);" id="lowStock">0</p></div>
         </div>
     </section>
 
     <!-- টিকিট পেজ -->
     <section id="tickets" class="page">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <h2 class="page-title" style="margin:0;">🎟️ মেরামত টিকিট ব্যবস্থাপনা</h2>
-            <div>
-                <button class="btn btn-primary" onclick="showPage('new-ticket')">➕ নতুন টিকিট</button>
-                <button class="btn btn-outline btn-sm" onclick="printAllTickets()">🖨️ সব টিকিট প্রিন্ট</button>
-                <button class="btn btn-outline btn-sm">📲 মেসেজ পাঠান</button>
-            </div>
+            <h2 class="page-title">🎟️ মেরামত টিকিট</h2>
+            <button class="btn btn-primary" onclick="showPage('new-ticket')">➕ নতুন টিকিট</button>
         </div>
         <div class="card">
             <h4>ফিল্টার করুন:</h4>
@@ -208,79 +194,95 @@
                 <span class="status-badge filter-btn" data-filter="সব" style="background:#E0E7FF; color:#3730A3;">সব দেখুন</span>
             </div>
         </div>
-        <div id="ticketsList">
-            <div class="card" style="text-align:center; color:#6B7280;">
-                <p>এখনো কোনো টিকিট তৈরি করা হয়নি।</p>
-                <button class="btn btn-sm btn-primary" onclick="showPage('new-ticket')" style="margin-top:10px;">প্রথম টিকিট তৈরি করুন</button>
-            </div>
-        </div>
+        <div id="ticketsList"></div>
     </section>
 
     <!-- নতুন টিকিট ফর্ম -->
     <section id="new-ticket" class="page">
         <div style="display:flex; align-items:center; gap:10px;">
             <button class="btn btn-outline btn-sm" onclick="showPage('tickets')">← পেছনে</button>
-            <h2 class="page-title" style="margin:0;">📝 নতুন মেরামত টিকিট তৈরি</h2>
+            <h2 class="page-title">📝 নতুন টিকিট</h2>
         </div>
         <form id="ticketForm" class="card">
-            <h3 style="margin-bottom:12px;">গ্রাহকের তথ্য</h3>
+            <h3>গ্রাহকের তথ্য</h3>
             <div class="form-row">
-                <div class="form-group"><label>গ্রাহকের নাম *</label><input type="text" id="custName" required placeholder="পুরো নাম লিখুন"></div>
-                <div class="form-group"><label>মোবাইল নম্বর *</label><input type="tel" id="custMobile" required placeholder="01XXXXXXXXX"></div>
+                <div class="form-group"><label>নাম *</label><input type="text" id="custName" required></div>
+                <div class="form-group"><label>মোবাইল *</label><input type="tel" id="custMobile" required></div>
             </div>
-            <div class="form-group"><label>ঠিকানা</label><input type="text" id="custAddress" placeholder="বাড়ি-গ্রাম-জেলা"></div>
-
-            <h3 style="margin:20px 0 12px;">ডিভাইসের তথ্য</h3>
+            <div class="form-group"><label>ঠিকানা</label><input type="text" id="custAddress"></div>
+            <h3>ডিভাইসের তথ্য</h3>
             <div class="form-row">
-                <div class="form-group"><label>পণ্যের ধরন *</label>
+                <div class="form-group"><label>ধরন *</label>
                     <select id="deviceType" required>
-                        <option value="">নির্বাচন করুন</option>
-                        <option>মোবাইল ফোন</option>
-                        <option>ল্যাপটপ</option>
-                        <option>ডেস্কটপ/কম্পিউটার</option>
-                        <option>প্রিন্টার</option>
-                        <option>মনিটর</option>
-                        <option>অন্যান্য</option>
+                        <option value="">নির্বাচন</option>
+                        <option>মোবাইল</option><option>ল্যাপটপ</option><option>ডেস্কটপ</option><option>প্রিন্টার</option><option>মনিটর</option><option>অন্যান্য</option>
                     </select>
                 </div>
-                <div class="form-group"><label>ব্র্যান্ড</label><input type="text" id="deviceBrand" placeholder="যেমন: Samsung/HP/Dell"></div>
+                <div class="form-group"><label>ব্র্যান্ড</label><input type="text" id="deviceBrand"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>মডেল নাম</label><input type="text" id="deviceModel" placeholder="যেমন: Galaxy A15"></div>
-                <div class="form-group"><label>সিরিয়াল/আইএমইআই</label><input type="text" id="deviceSerial" placeholder="স্ক্যান বা লিখুন"></div>
+                <div class="form-group"><label>মডেল</label><input type="text" id="deviceModel"></div>
+                <div class="form-group"><label>সিরিয়াল</label><input type="text" id="deviceSerial"></div>
             </div>
-
-            <h3 style="margin:20px 0 12px;">সাথে আনা জিনিসপত্র</h3>
-            <div class="check-item"><input type="checkbox" id="acc1" value="চার্জার"> <label for="acc1">চার্জার/অ্যাডাপ্টার</label></div>
-            <div class="check-item"><input type="checkbox" id="acc2" value="মেমরি কার্ড"> <label for="acc2">মেমরি কার্ড</label></div>
-            <div class="check-item"><input type="checkbox" id="acc3" value="সিম ট্রে"> <label for="acc3">সিম ট্রে</label></div>
-            <div class="check-item"><input type="checkbox" id="acc4" value="মূল বক্স"> <label for="acc4">মূল বক্স</label></div>
-
-            <div class="form-group" style="margin-top:20px;"><label>অগ্রিম জমা দেওয়া টাকা (টাকা)</label><input type="number" id="advancePaid" value="0" min="0" placeholder="০"></div>
-            <div class="form-group"><label>সমস্যার বিবরণ</label><textarea id="problemDesc" rows="3" placeholder="ডিভাইসের সমস্যা বিস্তারিত লিখুন..."></textarea></div>
-
-            <div style="margin-top:24px; display:flex; gap:10px; flex-wrap:wrap;">
-                <button type="submit" class="btn btn-success">💾 সংরক্ষণ করুন</button>
-                <button type="button" class="btn btn-outline" onclick="showPage('tickets')">বাতিল করুন</button>
+            <div class="form-group"><label>অগ্রিম জমা (টাকা)</label><input type="number" id="advancePaid" value="0" min="0"></div>
+            <div class="form-group"><label>সমস্যা</label><textarea id="problemDesc" rows="3"></textarea></div>
+            <div style="display:flex; gap:10px;">
+                <button type="submit" class="btn btn-success">সংরক্ষণ</button>
+                <button type="button" class="btn btn-outline" onclick="showPage('tickets')">বাতিল</button>
             </div>
         </form>
     </section>
 
-    <!-- অন্য পেজের কাঠামো -->
-    <section id="diagnosis" class="page"><h2 class="page-title">🧠 স্মার্ট ডায়াগনস্টিক ও সমাধান</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-    <section id="inventory" class="page"><h2 class="page-title">📦 স্টক ও পার্টস ব্যবস্থাপনা</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-    <section id="customers" class="page"><h2 class="page-title">👥 গ্রাহক ও টেকনিশিয়ান</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-    <section id="accounts" class="page"><h2 class="page-title">💳 হিসাব-নিকাশ ও বিলিং</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-    <section id="reports" class="page"><h2 class="page-title">📊 রিপোর্ট ও বিশ্লেষণ</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-    <section id="settings" class="page"><h2 class="page-title">⚙️ সেটিংস ও ব্যাকআপ</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
+    <!-- স্টক পেজ -->
+    <section id="inventory" class="page">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <h2 class="page-title">📦 স্টক ও পার্টস</h2>
+            <button class="btn btn-primary" onclick="showPage('add-stock')">➕ নতুন পণ্য যুক্ত</button>
+        </div>
+        <div id="stockList"></div>
+    </section>
+
+    <!-- নতুন পণ্য যুক্ত ফর্ম -->
+    <section id="add-stock" class="page">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="btn btn-outline btn-sm" onclick="showPage('inventory')">← পেছনে</button>
+            <h2 class="page-title">➕ নতুন পণ্য যুক্ত করুন</h2>
+        </div>
+        <form id="stockForm" class="card">
+            <div class="form-group"><label>পণ্যের নাম *</label><input type="text" id="itemName" required placeholder="যেমন: Samsung A12 ব্যাটারি"></div>
+            <div class="form-row">
+                <div class="form-group"><label>ব্র্যান্ড</label><input type="text" id="itemBrand"></div>
+                <div class="form-group"><label>প্রারম্ভিক পরিমাণ *</label><input type="number" id="itemQty" required min="1" value="1"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>ক্রয় মূল্য (টাকা)</label><input type="number" id="buyPrice" min="0"></div>
+                <div class="form-group"><label>বিক্রয় মূল্য (টাকা)</label><input type="number" id="sellPrice" min="0"></div>
+            </div>
+            <div class="form-group"><label>সতর্কতা সীমা (কম পরিমাণে সংকেত দিবে)</label><input type="number" id="alertLimit" min="1" value="5"></div>
+            <div class="form-group"><label>বিবরণ</label><textarea id="itemDesc" rows="2"></textarea></div>
+            <div style="display:flex; gap:10px;">
+                <button type="submit" class="btn btn-success">সংরক্ষণ করুন</button>
+                <button type="button" class="btn btn-outline" onclick="showPage('inventory')">বাতিল</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- সেটিংস -->
+    <section id="settings" class="page">
+        <h2 class="page-title">⚙️ সেটিংস</h2>
+        <div class="card">
+            <p>পরবর্তী আপডেটে ব্যাকআপ, পুনরুদ্ধার ও অন্যান্য সুবিধা যুক্ত করা হবে।</p>
+        </div>
+    </section>
 </main>
 
 <script>
-// স্থানীয় স্টোরেজ থেকে ডাটা লোড
+// ডেটা সংরক্ষণ
 let tickets = JSON.parse(localStorage.getItem('repairTickets')) || [];
 let ticketIdCounter = parseInt(localStorage.getItem('ticketIdCounter')) || 1000;
+let stockItems = JSON.parse(localStorage.getItem('stockItems')) || [];
 
-// সাইডবার নিয়ন্ত্রণ
+// সাইডবার
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
 }
@@ -290,22 +292,20 @@ function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
-    if(navItem) navItem.classList.add('active');
+    const nav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+    if(nav) nav.classList.add('active');
     if(window.innerWidth < 992) toggleSidebar();
-    
-    if(pageId === 'dashboard') updateDashboard();
+    updateDashboard();
     if(pageId === 'tickets') renderTickets('সব');
+    if(pageId === 'inventory') renderStock();
 }
 
-// নতুন টিকিট ফর্ম জমা দেওয়া
-document.getElementById('ticketForm').addEventListener('submit', function(e) {
+// নতুন টিকিট যুক্ত
+document.getElementById('ticketForm').addEventListener('submit', e => {
     e.preventDefault();
-    
-    const accessories = [];
-    document.querySelectorAll('[id^="acc"]:checked').forEach(cb => accessories.push(cb.value));
-    
-    const newTicket = {
+    const accs = [];
+    document.querySelectorAll('[id^="acc"]:checked').forEach(c => accs.push(c.value));
+    const t = {
         id: `TKT-${++ticketIdCounter}`,
         date: new Date().toLocaleString('bn-BD'),
         customer: {
@@ -319,183 +319,164 @@ document.getElementById('ticketForm').addEventListener('submit', function(e) {
             model: document.getElementById('deviceModel').value,
             serial: document.getElementById('deviceSerial').value
         },
-        accessories: accessories,
+        accessories: accs,
         advance: document.getElementById('advancePaid').value || 0,
         problem: document.getElementById('problemDesc').value,
         status: 'জমা নেওয়া হয়েছে'
     };
-    
-    tickets.unshift(newTicket);
+    tickets.unshift(t);
     localStorage.setItem('repairTickets', JSON.stringify(tickets));
     localStorage.setItem('ticketIdCounter', ticketIdCounter);
-    
-    alert(`✅ নতুন টিকিট তৈরি হয়েছে! টিকিট নম্বর: ${newTicket.id}`);
-    this.reset();
+    alert(`✅ নতুন টিকিট যুক্ত: ${t.id}`);
+    e.target.reset();
     showPage('tickets');
+});
+
+// নতুন পণ্য যুক্ত
+document.getElementById('stockForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const item = {
+        id: 'STK-' + Date.now(),
+        name: document.getElementById('itemName').value,
+        brand: document.getElementById('itemBrand').value,
+        quantity: parseInt(document.getElementById('itemQty').value),
+        buyPrice: document.getElementById('buyPrice').value || 0,
+        sellPrice: document.getElementById('sellPrice').value || 0,
+        alertLimit: parseInt(document.getElementById('alertLimit').value),
+        desc: document.getElementById('itemDesc').value || ''
+    };
+    stockItems.unshift(item);
+    localStorage.setItem('stockItems', JSON.stringify(stockItems));
+    alert(`✅ নতুন পণ্য যুক্ত হয়েছে: ${item.name}`);
+    e.target.reset();
+    showPage('inventory');
 });
 
 // ড্যাশবোর্ড আপডেট
 function updateDashboard() {
     document.getElementById('totalTickets').textContent = tickets.length;
-    const active = tickets.filter(t => !['ডেলিভারি দেওয়া হয়েছে','বাতিল/মেরামত অসম্ভব'].includes(t.status)).length;
-    document.getElementById('activeTickets').textContent = active;
-    const delivered = tickets.filter(t => t.status === 'ডেলিভারি দেওয়া হয়েছে').length;
-    document.getElementById('deliveredTickets').textContent = delivered;
-    
-    const recent = tickets.slice(0,3);
-    const listHtml = recent.length ? recent.map(t => `
-        <div class="ticket-card" style="margin:8px 0;">
-            <div class="ticket-header">
-                <span class="ticket-id">${t.id}</span>
-                <span class="status-badge ${getStatusClass(t.status)}">${t.status}</span>
-            </div>
-            <div class="ticket-details">
-                গ্রাহক: ${t.customer.name} | ফোন: ${t.customer.mobile}<br>
-                ডিভাইস: ${t.device.type} - ${t.device.brand || 'ব্র্যান্ড নেই'} ${t.device.model || ''}
-            </div>
-        </div>
-    `).join('') : '<p style="color:#6B7280;">এখনো কোনো টিকিট তৈরি করা হয়নি।</p>';
-    document.getElementById('recentTicketsList').innerHTML = listHtml;
+    document.getElementById('activeTickets').textContent = tickets.filter(t => !['ডেলিভারি দেওয়া হয়েছে','বাতিল/মেরামত অসম্ভব'].includes(t.status)).length;
+    document.getElementById('totalStock').textContent = stockItems.length;
+    document.getElementById('lowStock').textContent = stockItems.filter(i => i.quantity <= i.alertLimit).length;
 }
 
-// টিকিট রেন্ডার ও ফিল্টার
-function renderTickets(filter = 'সব') {
-    let filtered = filter === 'সব' ? tickets : tickets.filter(t => t.status === filter);
-    const listHtml = filtered.length ? filtered.map(t => `
-        <div class="ticket-card">
-            <div class="ticket-header">
-                <span class="ticket-id">${t.id} • ${t.date}</span>
-                <span class="status-badge ${getStatusClass(t.status)}">${t.status}</span>
-            </div>
-            <div class="ticket-details">
-                <strong>গ্রাহক:</strong> ${t.customer.name}<br>
-                <strong>ফোন:</strong> ${t.customer.mobile}<br>
-                ${t.customer.address ? `<strong>ঠিকানা:</strong> ${t.customer.address}<br>` : ''}
-                <strong>ডিভাইস:</strong> ${t.device.type} ${t.device.brand ? `- ${t.device.brand}` : ''} ${t.device.model || ''}<br>
-                ${t.device.serial ? `<strong>সিরিয়াল/আইএমইআই:</strong> ${t.device.serial}<br>` : ''}
-                <strong>সাথে আনা জিনিস:</strong> ${t.accessories.join(', ') || 'কিছুই নয়'}<br>
-                <strong>অগ্রিম জমা:</strong> ${t.advance} টাকা<br>
-                ${t.problem ? `<strong>সমস্যা:</strong> ${t.problem}` : ''}
-            </div>
-            <div class="ticket-actions">
-                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','জমা নেওয়া হয়েছে')">জমা নেওয়া</button>
-                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','পরীক্ষা করা হচ্ছে')">পরীক্ষা করা</button>
-                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','পার্টসের অপেক্ষায়')">পার্টসের অপেক্ষা</button>
-                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','ডেলিভারির জন্য প্রস্তুত')">প্রস্তুত করা</button>
-                <button class="btn btn-sm btn-success" onclick="changeStatus('${t.id}','ডেলিভারি দেওয়া হয়েছে')">ডেলিভারি দেওয়া</button>
-                <button class="btn btn-sm btn-danger" onclick="changeStatus('${t.id}','বাতিল/মেরামত অসম্ভব')">বাতিল</button>
-                <button class="btn btn-sm btn-primary" onclick="openReceipt('${t.id}')">🖨️ রশিদ প্রিন্ট</button>
-            </div>
-        </div>
-    `).join('') : `
-        <div class="card" style="text-align:center; color:#6B7280;">
-            <p>এই ফিল্টারে কোনো টিকিট পাওয়া যায়নি।</p>
-            <button class="btn btn-sm btn-primary" onclick="showPage('new-ticket')" style="margin-top:10px;">নতুন টিকিট তৈরি করুন</button>
-        </div>
-    `;
-    document.getElementById('ticketsList').innerHTML = listHtml;
-}
-
-// স্ট্যাটাসের রঙ নির্ধারণ
-function getStatusClass(status) {
-    const map = {
-        'জমা নেওয়া হয়েছে':'badge-yellow',
-        'পরীক্ষা করা হচ্ছে':'badge-blue',
-        'পার্টসের অপেক্ষায়':'badge-orange',
-        'ডেলিভারির জন্য প্রস্তুত':'badge-green',
-        'ডেলিভারি দেওয়া হয়েছে':'badge-gray',
-        'বাতিল/মেরামত অসম্ভব':'badge-red'
+// টিকিট প্রদর্শন ও ফিল্টার
+function getStatusColor(s) {
+    const m = {
+        'জমা নেওয়া হয়েছে':'badge-yellow','পরীক্ষা করা হচ্ছে':'badge-blue','পার্টসের অপেক্ষায়':'badge-orange',
+        'ডেলিভারির জন্য প্রস্তুত':'badge-green','ডেলিভারি দেওয়া হয়েছে':'badge-gray','বাতিল/মেরামত অসম্ভব':'badge-red'
     };
-    return map[status] || 'badge-gray';
+    return m[s] || 'badge-gray';
 }
-
-// স্ট্যাটাস পরিবর্তন
-function changeStatus(ticketId, newStatus) {
-    const idx = tickets.findIndex(t => t.id === ticketId);
-    if(idx > -1) {
-        tickets[idx].status = newStatus;
+function changeStatus(id, ns) {
+    const i = tickets.findIndex(t => t.id === id);
+    if(i > -1) {
+        tickets[i].status = ns;
         localStorage.setItem('repairTickets', JSON.stringify(tickets));
         renderTickets('সব');
         updateDashboard();
-        alert(`✅ টিকিটের স্ট্যাটাস পরিবর্তন হয়ে গেল: ${newStatus}`);
+        alert(`✅ স্ট্যাটাস পরিবর্তন: ${ns}`);
+    }
+}
+function renderTickets(filter='সব') {
+    const list = filter === 'সব' ? tickets : tickets.filter(t => t.status === filter);
+    const html = list.length ? list.map(t => `
+        <div class="ticket-card">
+            <div class="ticket-header">
+                <span class="ticket-id">${t.id} • ${t.date}</span>
+                <span class="status-badge ${getStatusColor(t.status)}">${t.status}</span>
+            </div>
+            <div class="ticket-details">
+                নাম: ${t.customer.name} • ফোন: ${t.customer.mobile}<br>
+                ডিভাইস: ${t.device.type} ${t.device.brand||''} ${t.device.model||''}<br>
+                অগ্রিম: ${t.advance} টাকা • সমস্যা: ${t.problem||'উল্লেখ নেই'}
+            </div>
+            <div class="ticket-actions">
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','জমা নেওয়া হয়েছে')">জমা</button>
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','পরীক্ষা করা হচ্ছে')">পরীক্ষা</button>
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','পার্টসের অপেক্ষায়')">পার্টস</button>
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','ডেলিভারির জন্য প্রস্তুত')">প্রস্তুত</button>
+                <button class="btn btn-sm btn-success" onclick="changeStatus('${t.id}','ডেলিভারি দেওয়া হয়েছে')">ডেলিভারি</button>
+                <button class="btn btn-sm btn-danger" onclick="changeStatus('${t.id}','বাতিল/মেরামত অসম্ভব')">বাতিল</button>
+                <button class="btn btn-sm btn-primary" onclick="openReceipt('${t.id}')">🖨️ রশিদ</button>
+            </div>
+        </div>
+    `).join('') : `<div class="card" style="text-align:center;"><p>কোনো টিকিট পাওয়া যায়নি।</p><button class="btn btn-sm btn-primary" onclick="showPage('new-ticket')" style="margin-top:10px;">নতুন টিকিট</button></div>`;
+    document.getElementById('ticketsList').innerHTML = html;
+}
+document.querySelectorAll('.filter-btn').forEach(b => b.addEventListener('click', () => renderTickets(b.dataset.filter)));
+
+// স্টক প্রদর্শন, যুক্ত, বিয়োগ, মুছে ফেলা
+function renderStock() {
+    const html = stockItems.length ? stockItems.map(i => `
+        <div class="stock-card">
+            <div class="stock-header">
+                <span class="stock-name">${i.name}</span>
+                <span class="stock-qty ${i.quantity <= i.alertLimit ? 'badge-low' : ''}">পরিমাণ: ${i.quantity} টি</span>
+            </div>
+            <div class="stock-details">
+                ব্র্যান্ড: ${i.brand||'উল্লেখ নেই'} • ক্রয়: ${i.buyPrice||0} টাকা • বিক্রয়: ${i.sellPrice||0} টাকা<br>
+                সতর্কতা সীমা: ${i.alertLimit} টি • বিবরণ: ${i.desc||'নেই'}
+            </div>
+            <div class="stock-actions">
+                <button class="btn btn-sm btn-success" onclick="updateStockQty('${i.id}', 1)">+১ যুক্ত</button>
+                <button class="btn btn-sm btn-warning" onclick="updateStockQty('${i.id}', -1)">-১ বিয়োগ</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteStockItem('${i.id}')">🗑️ মুছে ফেলুন</button>
+            </div>
+        </div>
+    `).join('') : `<div class="card" style="text-align:center;"><p>স্টকে কোনো পণ্য নেই।</p><button class="btn btn-sm btn-primary" onclick="showPage('add-stock')" style="margin-top:10px;">নতুন পণ্য যুক্ত</button></div>`;
+    document.getElementById('stockList').innerHTML = html;
+}
+function updateStockQty(id, val) {
+    const i = stockItems.findIndex(x => x.id === id);
+    if(i > -1) {
+        const newQty = stockItems[i].quantity + val;
+        if(newQty < 0) return alert('⚠️ পরিমাণ শূন্যের নিচে যাবে না!');
+        stockItems[i].quantity = newQty;
+        localStorage.setItem('stockItems', JSON.stringify(stockItems));
+        renderStock();
+        updateDashboard();
+        if(newQty <= stockItems[i].alertLimit) alert(`⚠️ সতর্কতা: ${stockItems[i].name} এর স্টক কমে গেছে!`);
+    }
+}
+function deleteStockItem(id) {
+    if(confirm('আপনি কি নিশ্চিত এই পণ্যটি স্থায়ীভাবে মুছে ফেলবেন?')) {
+        stockItems = stockItems.filter(x => x.id !== id);
+        localStorage.setItem('stockItems', JSON.stringify(stockItems));
+        renderStock();
+        updateDashboard();
     }
 }
 
-// ফিল্টার বাটন কার্যকারিতা যুক্তকরণ
-document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        renderTickets(btn.dataset.filter);
-    });
-});
-
-// রশিদ প্রিন্ট ফাংশন
-function openReceipt(ticketId) {
-    const ticket = tickets.find(t => t.id === ticketId);
-    if(!ticket) return;
-    
-    const receiptHTML = `
-        <div class="receipt-head">
-            <h3>কম্পিউটার ও মোবাইল মেরামত কেন্দ্র</h3>
-            <p>মেরামত রশিদ</p>
-        </div>
+// রশিদ প্রিন্ট
+function openReceipt(id) {
+    const t = tickets.find(x => x.id === id);
+    if(!t) return;
+    document.getElementById('receiptContent').innerHTML = `
+        <div class="receipt-head"><h3>মেরামত কেন্দ্র</h3><p>রশিদ</p></div>
         <div class="receipt-body">
-            <p><strong>টিকিট নম্বর:</strong> ${ticket.id}</p>
-            <p><strong>তারিখ ও সময়:</strong> ${ticket.date}</p>
-            <hr style="border:none; border-bottom:1px dashed #999; margin:5px 0;">
-            <p><strong>গ্রাহকের নাম:</strong> ${ticket.customer.name}</p>
-            <p><strong>মোবাইল নম্বর:</strong> ${ticket.customer.mobile}</p>
-            ${ticket.customer.address ? `<p><strong>ঠিকানা:</strong> ${ticket.customer.address}</p>` : ''}
-            <hr style="border:none; border-bottom:1px dashed #999; margin:5px 0;">
-            <p><strong>ডিভাইসের ধরন:</strong> ${ticket.device.type}</p>
-            <p><strong>ব্র্যান্ড ও মডেল:</strong> ${ticket.device.brand || ''} ${ticket.device.model || ''}</p>
-            ${ticket.device.serial ? `<p><strong>সিরিয়াল/আইএমইআই:</strong> ${ticket.device.serial}</p>` : ''}
-            <p><strong>সাথে আনা জিনিস:</strong> ${ticket.accessories.join(', ') || 'কিছুই নয়'}</p>
-            <p><strong>সমস্যার বিবরণ:</strong> ${ticket.problem || 'উল্লেখ নেই'}</p>
-            <p><strong>বর্তমান অবস্থা:</strong> ${ticket.status}</p>
-            <p><strong>অগ্রিম জমা টাকা:</strong> ${ticket.advance} টাকা</p>
+            <p><strong>টিকিট:</strong> ${t.id}</p><p><strong>তারিখ:</strong> ${t.date}</p><hr>
+            <p><strong>নাম:</strong> ${t.customer.name}</p><p><strong>ফোন:</strong> ${t.customer.mobile}</p>
+            <p><strong>ডিভাইস:</strong> ${t.device.type} ${t.device.brand||''} ${t.device.model||''}</p>
+            <p><strong>সমস্যা:</strong> ${t.problem||'উল্লেখ নেই'}</p><p><strong>অগ্রিম জমা:</strong> ${t.advance} টাকা</p>
+            <p><strong>বর্তমান অবস্থা:</strong> ${t.status}</p>
         </div>
-        <div class="receipt-foot">
-            <p>ধন্যবাদ আমাদের সেবা গ্রহণ করার জন্য</p>
-            <p>প্রয়োজনে যোগাযোগ করুন</p>
-        </div>
-    `;
-    
-    document.getElementById('receiptContent').innerHTML = receiptHTML;
+        <div class="receipt-foot"><p>ধন্যবাদ</p></div>`;
     document.getElementById('receiptModal').classList.add('active');
 }
+function closeReceipt() { document.getElementById('receiptModal').classList.remove('active'); }
+function printReceipt() { window.print(); }
 
-function closeReceipt() {
-    document.getElementById('receiptModal').classList.remove('active');
-}
-
-function printReceipt() {
-    window.print();
-}
-
-function printAllTickets() {
-    if(tickets.length === 0) {
-        alert('❌ প্রিন্ট করার মতো কোনো টিকিট নেই!');
-        return;
-    }
-    alert('✅ প্রথমে প্রয়োজনীয় টিকিটের পাশের "রশিদ প্রিন্ট" বাটন ব্যবহার করুন। পরবর্তীতে সব একসাথে প্রিন্ট করার সুবিধা যুক্ত করা হবে।');
-}
-
-// নেটওয়ার্ক অবস্থা পরিবর্তন
+// নেটওয়ার্ক
 function updateNetStatus() {
-    const isOnline = navigator.onLine;
-    document.getElementById('netDot').classList.toggle('offline', !isOnline);
-    document.getElementById('netText').textContent = isOnline ? 'অনলাইন' : 'অফলাইন';
+    const ol = navigator.onLine;
+    document.getElementById('netDot').classList.toggle('offline', !ol);
+    document.getElementById('netText').textContent = ol ? 'অনলাইন' : 'অফলাইন';
 }
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
-updateNetStatus();
 
-// সিঙ্ক বাটন
-function syncData() {
-    alert('✅ আপনার সব টিকিট এখন স্থানীয়ভাবে নিরাপদে সংরক্ষিত আছে। পরবর্তী আপডেটে ক্লাউড সিঙ্ক যুক্ত করা হবে।');
-}
-
-// প্রথমবার লোডের সময় ড্যাশবোর্ড আপডেট
+// শুরুতে লোড
 updateDashboard();
 </script>
 </body>
