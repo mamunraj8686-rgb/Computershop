@@ -1,9 +1,40 @@
-<div class="item-actions">
-    <button class="btn-small btn-warning no-print">সম্পাদনা</button>
-    <button class="btn-small btn-primary no-print" onclick="printTicket(${t.id})">🖨️ প্রিন্ট</button>
-    <button class="btn-small btn-info no-print" onclick="sendVia('sms',${t.id})">📩 এসএমএস</button>
-    <button class="btn-small no-print" style="background:#25D366; color:white;" onclick="sendVia('whatsapp',${t.id})">💚 হোয়াটসঅ্যাপ</button>
-    <button class="btn-small no-print" style="background:#0084FF; color:white;" onclick="sendVia('messenger',${t.id})">💙 মেসেঞ্জার</button>
-    <button class="btn-small no-print" style="background:#FF6600; color:white;" onclick="sendVia('imo',${t.id})">🧡 ইমু</button>
-    <button class="btn-small btn-danger no-print" onclick="deleteItem('ticket',${t.id})">মুছুন</button>
-</div>
+// সব মাধ্যমে বার্তা পাঠানোর সাধারণ ফাংশন
+function sendVia(method, ticketId) {
+    const ticket = allData.ticket.find(t => t.id === ticketId);
+    if(!ticket) return alert('❌ টিকিট পাওয়া যায়নি!');
+
+    // বার্তার বিষয়বস্তু
+    const msgText = `হ্যালো ${ticket.custName || 'গ্রাহক'},
+আপনার মেরামত টিকিট নিশ্চিত করা হলো:
+✅ ডিভাইস: ${ticket.device || 'উল্লেখ নেই'}
+✅ সমস্যা: ${ticket.problem || 'উল্লেখ নেই'}
+✅ আনুমানিক খরচ: ${ticket.cost || '০'} টাকা
+✅ অগ্রিম গ্রহণ: ${ticket.advance || '০'} টাকা
+✅ বাকি দিতে হবে: ${Number(ticket.cost||0) - Number(ticket.advance||0)} টাকা
+✅ তারিখ: ${new Date(ticket.date).toLocaleString('bn-BD')}
+
+দ্রুত যোগাযোগ করুন ধন্যবাদ।`;
+    const encodedMsg = encodeURIComponent(msgText);
+    const phone = prompt('গ্রাহকের নম্বর দিন (দেশের কোডসহ যেমন: +88017XXXXXXXX):', '');
+    if(!phone) return;
+
+    // পদ্ধতি অনুযায়ী লিঙ্ক তৈরি
+    let link = '';
+    switch(method) {
+        case 'sms':
+            link = `sms:${phone}?body=${encodedMsg}`;
+            break;
+        case 'whatsapp':
+            link = `https://wa.me/${phone.replace(/\D/g,'')}?text=${encodedMsg}`;
+            break;
+        case 'messenger':
+            alert('💙 মেসেঞ্জারে নম্বর দিয়ে সরাসরি বার্তা পাঠানো যায় না—এটি খুলে নম্বরটি সার্চ করে পাঠান বা বার্তাটি কপি করে নিন:\n\n'+msgText);
+            link = 'https://m.me/';
+            break;
+        case 'imo':
+            alert('🧡 ইমুতে সরাসরি লিঙ্ক থেকে বার্তা পাঠানোর সুবিধা নেই—এটি খুলে নম্বরটি সার্চ করে বার্তাটি পাঠান:\n\n'+msgText);
+            window.open('imo:', '_blank');
+            return;
+    }
+    window.open(link, '_blank');
+}
