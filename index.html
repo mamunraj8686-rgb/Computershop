@@ -1,261 +1,8 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0F4C81">
-    <title>কম্পিউটার দোকান প্রফেশনাল ম্যানেজার</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Roboto,'Noto Sans Bengali',sans-serif; }
-        :root {
-            --primary:#0F4C81; --primary-light:#1A73B9; --accent:#FF9F1C;
-            --success:#2E933C; --warning:#F59E0B; --danger:#E71D36; --info:#3B82F6;
-            --light:#F8FBFE; --dark:#2D3748; --border:#E2E8F0; --shadow:0 4px 12px rgba(0,0,0,0.08);
-            --radius:12px; --top-h:60px; --sidebar-w:260px;
-        }
-        body { background:var(--light); color:var(--dark); min-height:100vh; padding-top:var(--top-h); }
-
-        /* টপ নেভিগেশন বার */
-        .top-bar {
-            position:fixed; top:0; left:0; width:100%; height:var(--top-h); background:linear-gradient(135deg,var(--primary),var(--primary-light));
-            color:white; display:flex; align-items:center; justify-content:space-between; padding:0 16px; z-index:999; box-shadow:var(--shadow);
-        }
-        .top-left { display:flex; align-items:center; gap:12px; }
-        .menu-toggle { font-size:22px; cursor:pointer; background:rgba(255,255,255,0.15); padding:6px 10px; border-radius:8px; }
-        .status-indicator { display:flex; align-items:center; gap:6px; font-size:14px; }
-        .status-dot { width:10px; height:10px; border-radius:50%; background:var(--success); animation:pulse 2s infinite; }
-        .status-dot.offline { background:var(--danger); animation:none; }
-        @keyframes pulse { 0% {box-shadow:0 0 0 0 rgba(46,147,60,0.4);} 70% {box-shadow:0 0 0 10px rgba(46,147,60,0);} 100% {box-shadow:0 0 0 0 rgba(46,147,60,0);} }
-        .search-box { flex:1; max-width:450px; margin:0 16px; position:relative; }
-        .search-box input { width:100%; padding:10px 14px 10px 38px; border:none; border-radius:20px; font-size:14px; }
-        .search-box i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94A3B8; }
-        .top-actions { display:flex; align-items:center; gap:12px; font-size:20px; }
-        .action-btn { cursor:pointer; padding:6px; border-radius:50%; transition:0.2s; }
-        .action-btn:hover { background:rgba(255,255,255,0.15); }
-
-        /* সাইডবার */
-        .sidebar {
-            position:fixed; top:var(--top-h); left:-100%; width:var(--sidebar-w); height:calc(100vh - var(--top-h)); background:white;
-            box-shadow:2px 0 10px rgba(0,0,0,0.1); transition:left 0.3s ease; z-index:998; overflow-y:auto;
-        }
-        .sidebar.open { left:0; }
-        .sidebar-nav { padding:16px 0; }
-        .nav-item {
-            display:flex; align-items:center; gap:12px; padding:12px 20px; cursor:pointer; transition:0.2s;
-            border-left:4px solid transparent; font-size:15px; font-weight:500;
-        }
-        .nav-item.active { background:rgba(15,76,129,0.08); border-left-color:var(--primary); color:var(--primary); }
-        .nav-item:hover { background:rgba(15,76,129,0.04); }
-        .sidebar-overlay {
-            position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:997; display:none;
-        }
-        .sidebar.open + .sidebar-overlay { display:block; }
-
-        /* মূল কন্টেন্ট এরিয়া */
-        .main-content { padding:20px; max-width:1200px; margin:0 auto; transition:margin-left 0.3s; }
-        .page { display:none; animation:fadeUp 0.3s ease; }
-        .page.active { display:block; }
-        @keyframes fadeUp { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
-        .page-title { font-size:22px; color:var(--primary); margin-bottom:20px; padding-bottom:8px; border-bottom:2px solid var(--border); }
-
-        /* বাটন ও ফর্ম */
-        .btn { padding:10px 18px; border:none; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:6px; }
-        .btn-primary { background:var(--primary); color:white; }
-        .btn-primary:hover { background:var(--primary-light); }
-        .btn-success { background:var(--success); color:white; }
-        .btn-warning { background:var(--warning); color:white; }
-        .btn-danger { background:var(--danger); color:white; }
-        .btn-outline { background:white; border:1px solid var(--border); color:var(--dark); }
-        .btn-sm { padding:6px 12px; font-size:13px; }
-        .form-group { margin-bottom:14px; }
-        .form-group label { display:block; font-size:14px; font-weight:500; margin-bottom:5px; }
-        .form-group input, .form-group select, .form-group textarea {
-            width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-size:14px;
-        }
-        .form-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
-        .card { background:white; padding:18px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; }
-        .check-item { display:flex; align-items:center; gap:8px; margin:8px 0; cursor:pointer; }
-        .status-badge { padding:4px 10px; border-radius:20px; font-size:12px; font-weight:500; }
-        .badge-yellow { background:#FEF3C7; color:#92400E; }
-        .badge-blue { background:#DBEAFE; color:#1E40AF; }
-        .badge-orange { background:#FFEDD5; color:#9A3412; }
-        .badge-green { background:#D1FAE5; color:#065F46; }
-        .badge-red { background:#FEE2E2; color:#991B1B; }
-        .badge-gray { background:#F3F4F6; color:#374151; }
-
-        /* টিকিট কার্ড */
-        .ticket-card { border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; background:white; }
-        .ticket-header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
-        .ticket-id { font-weight:bold; color:var(--primary); font-size:15px; }
-        .ticket-details { font-size:14px; color:#4B5563; line-height:1.6; }
-        .ticket-actions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
-
-        /* মোবাইল রেসপন্সিভ */
-        @media (min-width:992px) {
-            .menu-toggle { display:none; }
-            .sidebar { left:0; }
-            .sidebar-overlay { display:none !important; }
-            .main-content { margin-left:var(--sidebar-w); }
-        }
-        @media (max-width:768px) {
-            .search-box { display:none; }
-            .main-content { padding:14px; }
-        }
-    </style>
-</head>
-<body>
-
-<!-- টপ নেভিগেশন বার -->
-<header class="top-bar">
-    <div class="top-left">
-        <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
-        <div class="status-indicator">
-            <span class="status-dot" id="netDot"></span>
-            <span id="netText">অনলাইন</span>
-        </div>
-        <button class="action-btn" title="এখনই সিঙ্ক করুন" onclick="syncData()">🔄</button>
-    </div>
-    <div class="search-box">
-        <i>🔍</i>
-        <input type="text" id="searchInput" placeholder="টিকিট আইডি / ফোন নম্বর / সিরিয়াল দিয়ে খুঁজুন...">
-    </div>
-    <div class="top-actions">
-        <div class="action-btn" title="সতর্কবার্তা">🔔</div>
-        <div class="action-btn" title="অ্যাকাউন্ট" onclick="showPage('settings')">👤</div>
-    </div>
-</header>
-
-<!-- সাইডবার -->
-<aside class="sidebar" id="sidebar">
-    <nav class="sidebar-nav">
-        <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">📊 ড্যাশবোর্ড</div>
-        <div class="nav-item" data-page="tickets" onclick="showPage('tickets')">🎟️ মেরামত টিকিট</div>
-        <div class="nav-item" data-page="diagnosis" onclick="showPage('diagnosis')">🧠 স্মার্ট ডায়াগনস্টিক</div>
-        <div class="nav-item" data-page="inventory" onclick="showPage('inventory')">📦 স্টক ও পার্টস</div>
-        <div class="nav-item" data-page="customers" onclick="showPage('customers')">👥 গ্রাহক ও টেকনিশিয়ান</div>
-        <div class="nav-item" data-page="accounts" onclick="showPage('accounts')">💳 হিসাব ও বিলিং</div>
-        <div class="nav-item" data-page="reports" onclick="showPage('reports')">📊 রিপোর্ট</div>
-        <div class="nav-item" data-page="settings" onclick="showPage('settings')">⚙️ সেটিংস ও ব্যাকআপ</div>
-    </nav>
-</aside>
-<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-<!-- মূল কন্টেন্ট -->
-<main class="main-content">
-    <!-- ড্যাশবোর্ড পেজ -->
-    <section id="dashboard" class="page active">
-        <h2 class="page-title">🏠 আপনার ড্যাশবোর্ড</h2>
-        <div class="form-row">
-            <div class="card" style="margin:0;"><h3>মোট টিকিট</h3><p style="font-size:28px; font-weight:bold; color:var(--primary);" id="totalTickets">0</p></div>
-            <div class="card" style="margin:0;"><h3>চলমান কাজ</h3><p style="font-size:28px; font-weight:bold; color:var(--warning);" id="activeTickets">0</p></div>
-            <div class="card" style="margin:0;"><h3>ডেলিভারি দেওয়া হয়েছে</h3><p style="font-size:28px; font-weight:bold; color:var(--success);" id="deliveredTickets">0</p></div>
-        </div>
-        <div class="card" style="margin-top:20px;">
-            <h3>সাম্প্রতিক টিকিট</h3>
-            <div id="recentTicketsList" style="margin-top:12px;">
-                <p style="color:#6B7280;">এখনো কোনো টিকিট তৈরি করা হয়নি।</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- টিকিট পেজ -->
-    <section id="tickets" class="page">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <h2 class="page-title" style="margin:0;">🎟️ মেরামত টিকিট ব্যবস্থাপনা</h2>
-            <div>
-                <button class="btn btn-primary" onclick="showPage('new-ticket')">➕ নতুন টিকিট</button>
-                <button class="btn btn-outline btn-sm">🖨️ লেবেল প্রিন্ট</button>
-                <button class="btn btn-outline btn-sm">📲 মেসেজ পাঠান</button>
-            </div>
-        </div>
-        <div class="card">
-            <h4>ফিল্টার করুন:</h4>
-            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
-                <span class="status-badge badge-yellow filter-btn" data-filter="Received">জমা নেওয়া হয়েছে</span>
-                <span class="status-badge badge-blue filter-btn" data-filter="Diagnosing">পরীক্ষা চলছে</span>
-                <span class="status-badge badge-orange filter-btn" data-filter="Waiting">পার্টসের অপেক্ষায়</span>
-                <span class="status-badge badge-green filter-btn" data-filter="Ready">ডেলিভারির জন্য প্রস্তুত</span>
-                <span class="status-badge filter-btn badge-gray" data-filter="Delivered">ডেলিভারি দেওয়া হয়েছে</span>
-                <span class="status-badge badge-red filter-btn" data-filter="Cancelled">বাতিল/মেরামত অসম্ভব</span>
-                <span class="status-badge filter-btn" data-filter="All" style="background:#E0E7FF; color:#3730A3;">সব দেখুন</span>
-            </div>
-        </div>
-        <div id="ticketsList">
-            <div class="card" style="text-align:center; color:#6B7280;">
-                <p>এখনো কোনো টিকিট তৈরি করা হয়নি।</p>
-                <button class="btn btn-sm btn-primary" onclick="showPage('new-ticket')" style="margin-top:10px;">প্রথম টিকিট তৈরি করুন</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- নতুন টিকিট ফর্ম -->
-    <section id="new-ticket" class="page">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <button class="btn btn-outline btn-sm" onclick="showPage('tickets')">← পেছনে</button>
-            <h2 class="page-title" style="margin:0;">📝 নতুন মেরামত টিকিট তৈরি</h2>
-        </div>
-        <form id="ticketForm" class="card">
-            <h3 style="margin-bottom:12px;">গ্রাহকের তথ্য</h3>
-            <div class="form-row">
-                <div class="form-group"><label>গ্রাহকের নাম *</label><input type="text" id="custName" required placeholder="পুরো নাম লিখুন"></div>
-                <div class="form-group"><label>মোবাইল নম্বর *</label><input type="tel" id="custMobile" required placeholder="01XXXXXXXXX"></div>
-            </div>
-            <div class="form-group"><label>ঠিকানা</label><input type="text" id="custAddress" placeholder="বাড়ি-গ্রাম-জেলা"></div>
-
-            <h3 style="margin:20px 0 12px;">ডিভাইসের তথ্য</h3>
-            <div class="form-row">
-                <div class="form-group"><label>পণ্যের ধরন *</label>
-                    <select id="deviceType" required>
-                        <option value="">নির্বাচন করুন</option>
-                        <option>মোবাইল ফোন</option>
-                        <option>ল্যাপটপ</option>
-                        <option>ডেস্কটপ/কম্পিউটার</option>
-                        <option>প্রিন্টার</option>
-                        <option>মনিটর</option>
-                        <option>অন্যান্য</option>
-                    </select>
-                </div>
-                <div class="form-group"><label>ব্র্যান্ড</label><input type="text" id="deviceBrand" placeholder="যেমন: Samsung/HP/Dell"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>মডেল নাম</label><input type="text" id="deviceModel" placeholder="যেমন: Galaxy A15"></div>
-                <div class="form-group"><label>সিরিয়াল/আইএমইআই</label><input type="text" id="deviceSerial" placeholder="স্ক্যান বা লিখুন"></div>
-            </div>
-
-            <h3 style="margin:20px 0 12px;">সাথে আনা জিনিসপত্র</h3>
-            <div class="check-item"><input type="checkbox" id="acc1" value="চার্জার"> <label for="acc1">চার্জার/অ্যাডাপ্টার</label></div>
-            <div class="check-item"><input type="checkbox" id="acc2" value="মেমরি কার্ড"> <label for="acc2">মেমরি কার্ড</label></div>
-            <div class="check-item"><input type="checkbox" id="acc3" value="সিম ট্রে"> <label for="acc3">সিম ট্রে</label></div>
-            <div class="check-item"><input type="checkbox" id="acc4" value="মূল বক্স"> <label for="acc4">মূল বক্স</label></div>
-
-            <div class="form-group" style="margin-top:20px;"><label>অগ্রিম জমা দেওয়া টাকা (টাকা)</label><input type="number" id="advancePaid" value="0" min="0" placeholder="০"></div>
-            <div class="form-group"><label>সমস্যার বিবরণ</label><textarea id="problemDesc" rows="3" placeholder="ডিভাইসের সমস্যা বিস্তারিত লিখুন..."></textarea></div>
-
-            <div style="margin-top:24px; display:flex; gap:10px; flex-wrap:wrap;">
-                <button type="submit" class="btn btn-success">💾 সংরক্ষণ করুন</button>
-                <button type="button" class="btn btn-outline" onclick="showPage('tickets')">বাতিল করুন</button>
-            </div>
-        </form>
-    </section>
-
-    <!-- অন্য পেজের কাঠামো -->
-    <section id="diagnosis" class="page"><h2 class="page-title">🧠 স্মার্ট ডায়াগনস্টিক ও সমাধান</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-    <section id="inventory" class="page"><h2 class="page-title">📦 স্টক ও পার্টস ব্যবস্থাপনা</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-    <section id="customers" class="page"><h2 class="page-title">👥 গ্রাহক ও টেকনিশিয়ান</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-    <section id="accounts" class="page"><h2 class="page-title">💳 হিসাব-নিকাশ ও বিলিং</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-    <section id="reports" class="page"><h2 class="page-title">📊 রিপোর্ট ও বিশ্লেষণ</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-    <section id="settings" class="page"><h2 class="page-title">⚙️ সেটিংস ও ব্যাকআপ</h2><div class="card">এই পেজটি পরবর্তী আপডেটে প্রস্তুত করা হবে।</div></section>
-</main>
-
-<script>
-// স্থানীয় স্টোরেজ থেকে ডাটা লোড
 let tickets = JSON.parse(localStorage.getItem('repairTickets')) || [];
 let ticketIdCounter = parseInt(localStorage.getItem('ticketIdCounter')) || 1000;
 
-// সাইডবার নিয়ন্ত্রণ
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-// পেজ পরিবর্তন
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
@@ -263,15 +10,12 @@ function showPage(pageId) {
     const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if(navItem) navItem.classList.add('active');
     if(window.innerWidth < 992) toggleSidebar();
-    
     if(pageId === 'dashboard') updateDashboard();
-    if(pageId === 'tickets') renderTickets();
+    if(pageId === 'tickets') renderTickets('সব');
 }
 
-// নতুন টিকিট ফর্ম জমা দেওয়া
 document.getElementById('ticketForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    
     const accessories = [];
     document.querySelectorAll('[id^="acc"]:checked').forEach(cb => accessories.push(cb.value));
     
@@ -292,24 +36,22 @@ document.getElementById('ticketForm').addEventListener('submit', function(e) {
         accessories: accessories,
         advance: document.getElementById('advancePaid').value || 0,
         problem: document.getElementById('problemDesc').value,
-        status: 'Received'
+        status: 'জমা নেওয়া হয়েছে'
     };
     
     tickets.unshift(newTicket);
     localStorage.setItem('repairTickets', JSON.stringify(tickets));
     localStorage.setItem('ticketIdCounter', ticketIdCounter);
-    
     alert(`✅ নতুন টিকিট তৈরি হয়েছে! টিকিট নম্বর: ${newTicket.id}`);
     this.reset();
     showPage('tickets');
 });
 
-// ড্যাশবোর্ড আপডেট
 function updateDashboard() {
     document.getElementById('totalTickets').textContent = tickets.length;
-    const active = tickets.filter(t => !['Delivered','Cancelled'].includes(t.status)).length;
+    const active = tickets.filter(t => !['ডেলিভারি দেওয়া হয়েছে','বাতিল/মেরামত অসম্ভব'].includes(t.status)).length;
     document.getElementById('activeTickets').textContent = active;
-    const delivered = tickets.filter(t => t.status === 'Delivered').length;
+    const delivered = tickets.filter(t => t.status === 'ডেলিভারি দেওয়া হয়েছে').length;
     document.getElementById('deliveredTickets').textContent = delivered;
     
     const recent = tickets.slice(0,3);
@@ -317,7 +59,7 @@ function updateDashboard() {
         <div class="ticket-card" style="margin:8px 0;">
             <div class="ticket-header">
                 <span class="ticket-id">${t.id}</span>
-                <span class="status-badge ${getStatusClass(t.status)}">${getStatusText(t.status)}</span>
+                <span class="status-badge ${getStatusClass(t.status)}">${t.status}</span>
             </div>
             <div class="ticket-details">
                 গ্রাহক: ${t.customer.name} | ফোন: ${t.customer.mobile}<br>
@@ -328,14 +70,13 @@ function updateDashboard() {
     document.getElementById('recentTicketsList').innerHTML = listHtml;
 }
 
-// টিকিট রেন্ডার করা
-function renderTickets(filter = 'All') {
-    let filtered = filter === 'All' ? tickets : tickets.filter(t => t.status === filter);
+function renderTickets(filter = 'সব') {
+    let filtered = filter === 'সব' ? tickets : tickets.filter(t => t.status === filter);
     const listHtml = filtered.length ? filtered.map(t => `
         <div class="ticket-card">
             <div class="ticket-header">
                 <span class="ticket-id">${t.id} • ${t.date}</span>
-                <span class="status-badge ${getStatusClass(t.status)}">${getStatusText(t.status)}</span>
+                <span class="status-badge ${getStatusClass(t.status)}">${t.status}</span>
             </div>
             <div class="ticket-details">
                 <strong>গ্রাহক:</strong> ${t.customer.name} | ফোন: ${t.customer.mobile}<br>
@@ -346,12 +87,12 @@ function renderTickets(filter = 'All') {
                 ${t.problem ? `<br><strong>সমস্যা:</strong> ${t.problem}` : ''}
             </div>
             <div class="ticket-actions">
-                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','Received')">জমা নেওয়া</button>
-                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','Diagnosing')">পরীক্ষা করা</button>
-                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','Waiting')">পার্টসের অপেক্ষা</button>
-                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','Ready')">প্রস্তুত করা</button>
-                <button class="btn btn-sm btn-success" onclick="changeStatus('${t.id}','Delivered')">ডেলিভারি দেওয়া</button>
-                <button class="btn btn-sm btn-danger" onclick="changeStatus('${t.id}','Cancelled')">বাতিল</button>
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','জমা নেওয়া হয়েছে')">জমা নেওয়া</button>
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','পরীক্ষা করা হচ্ছে')">পরীক্ষা করা</button>
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','পার্টসের অপেক্ষায়')">পার্টসের অপেক্ষা</button>
+                <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','ডেলিভারির জন্য প্রস্তুত')">প্রস্তুত করা</button>
+                <button class="btn btn-sm btn-success" onclick="changeStatus('${t.id}','ডেলিভারি দেওয়া হয়েছে')">ডেলিভারি দেওয়া</button>
+                <button class="btn btn-sm btn-danger" onclick="changeStatus('${t.id}','বাতিল/মেরামত অসম্ভব')">বাতিল</button>
             </div>
         </div>
     `).join('') : `
@@ -363,23 +104,14 @@ function renderTickets(filter = 'All') {
     document.getElementById('ticketsList').innerHTML = listHtml;
 }
 
-// স্ট্যাটাসের ক্লাস ও বাংলা নাম
 function getStatusClass(status) {
     const map = {
-        'Received':'badge-yellow','Diagnosing':'badge-blue','Waiting':'badge-orange',
-        'Ready':'badge-green','Delivered':'badge-gray','Cancelled':'badge-red'
+        'জমা নেওয়া হয়েছে':'badge-yellow','পরীক্ষা করা হচ্ছে':'badge-blue','পার্টসের অপেক্ষায়':'badge-orange',
+        'ডেলিভারির জন্য প্রস্তুত':'badge-green','ডেলিভারি দেওয়া হয়েছে':'badge-gray','বাতিল/মেরামত অসম্ভব':'badge-red'
     };
     return map[status] || 'badge-gray';
 }
-function getStatusText(status) {
-    const map = {
-        'Received':'জমা নেওয়া হয়েছে','Diagnosing':'পরীক্ষা করা হচ্ছে','Waiting':'পার্টসের অপেক্ষায়',
-        'Ready':'ডেলিভারির জন্য প্রস্তুত','Delivered':'ডেলিভারি দেওয়া হয়েছে','Cancelled':'বাতিল/মেরামত অসম্ভব'
-    };
-    return map[status] || status;
-}
 
-// স্ট্যাটাস পরিবর্তন
 function changeStatus(ticketId, newStatus) {
     const idx = tickets.findIndex(t => t.id === ticketId);
     if(idx > -1) {
@@ -387,16 +119,14 @@ function changeStatus(ticketId, newStatus) {
         localStorage.setItem('repairTickets', JSON.stringify(tickets));
         renderTickets();
         updateDashboard();
-        alert(`✅ টিকিটের স্ট্যাটাস পরিবর্তন হয়ে গেল: ${getStatusText(newStatus)}`);
+        alert(`✅ টিকিটের স্ট্যাটাস পরিবর্তন হয়ে গেল: ${newStatus}`);
     }
 }
 
-// ফিল্টার বাটন কাজ
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => renderTickets(btn.dataset.filter));
 });
 
-// নেটওয়ার্ক স্ট্যাটাস চেক
 function updateNetStatus() {
     const isOnline = navigator.onLine;
     document.getElementById('netDot').classList.toggle('offline', !isOnline);
@@ -406,13 +136,8 @@ window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 updateNetStatus();
 
-// সিঙ্ক বাটন
 function syncData() {
     alert('✅ আপনার সব টিকিট স্থানীয়ভাবে সংরক্ষিত আছে। পরবর্তীতে ক্লাউড সিঙ্ক যুক্ত করা হবে।');
 }
 
-// প্রথমবার লোড হলে ড্যাশবোর্ড আপডেট
 updateDashboard();
-</script>
-</body>
-</html>
