@@ -1,40 +1,199 @@
-// সব মাধ্যমে বার্তা পাঠানোর সাধারণ ফাংশন
-function sendVia(method, ticketId) {
-    const ticket = allData.ticket.find(t => t.id === ticketId);
-    if(!ticket) return alert('❌ টিকিট পাওয়া যায়নি!');
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0F4C81">
+    <title>কম্পিউটার ও মেরামত দোকান ব্যবস্থাপনা</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, 'Noto Sans Bengali', sans-serif; }
+        :root {
+            --primary: #0F4C81; --success: #22C55E; --whatsapp: #25D366;
+            --warning: #F59E0B; --danger: #EF4444; --light: #F8FAFC;
+            --dark: #1E293B; --border: #E2E8F0; --radius: 10px;
+        }
+        [data-theme="dark"] { --light: #0F172A; --dark: #F8FAFC; --border: #334155; }
+        body { background: var(--light); color: var(--dark); min-height: 100vh; padding: 16px; }
 
-    // বার্তার বিষয়বস্তু
-    const msgText = `হ্যালো ${ticket.custName || 'গ্রাহক'},
-আপনার মেরামত টিকিট নিশ্চিত করা হলো:
-✅ ডিভাইস: ${ticket.device || 'উল্লেখ নেই'}
-✅ সমস্যা: ${ticket.problem || 'উল্লেখ নেই'}
-✅ আনুমানিক খরচ: ${ticket.cost || '০'} টাকা
-✅ অগ্রিম গ্রহণ: ${ticket.advance || '০'} টাকা
-✅ বাকি দিতে হবে: ${Number(ticket.cost||0) - Number(ticket.advance||0)} টাকা
-✅ তারিখ: ${new Date(ticket.date).toLocaleString('bn-BD')}
+        /* প্রিন্টের সময় শুধু টিকিট দেখাবে */
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left:0; top:0; width:100%; padding:20px; }
+            .no-print { display: none !important; }
+        }
 
-দ্রুত যোগাযোগ করুন ধন্যবাদ।`;
-    const encodedMsg = encodeURIComponent(msgText);
-    const phone = prompt('গ্রাহকের নম্বর দিন (দেশের কোডসহ যেমন: +88017XXXXXXXX):', '');
-    if(!phone) return;
+        .page-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+        .card { background: white; border-radius: var(--radius); box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 18px; margin-bottom: 16px; }
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; width: 100%; justify-content: center; margin: 6px 0; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-whatsapp { background: var(--whatsapp); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-small { width: auto; padding: 6px 10px; font-size: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        label { font-size: 13px; font-weight: 600; color: #475569; }
+        input, textarea { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: transparent; color: var(--dark); }
+        .list-item { padding: 12px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+        .item-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
 
-    // পদ্ধতি অনুযায়ী লিঙ্ক তৈরি
-    let link = '';
-    switch(method) {
-        case 'sms':
-            link = `sms:${phone}?body=${encodedMsg}`;
-            break;
-        case 'whatsapp':
-            link = `https://wa.me/${phone.replace(/\D/g,'')}?text=${encodedMsg}`;
-            break;
-        case 'messenger':
-            alert('💙 মেসেঞ্জারে নম্বর দিয়ে সরাসরি বার্তা পাঠানো যায় না—এটি খুলে নম্বরটি সার্চ করে পাঠান বা বার্তাটি কপি করে নিন:\n\n'+msgText);
-            link = 'https://m.me/';
-            break;
-        case 'imo':
-            alert('🧡 ইমুতে সরাসরি লিঙ্ক থেকে বার্তা পাঠানোর সুবিধা নেই—এটি খুলে নম্বরটি সার্চ করে বার্তাটি পাঠান:\n\n'+msgText);
-            window.open('imo:', '_blank');
-            return;
-    }
-    window.open(link, '_blank');
+<!-- টিকিট তৈরি ফর্ম -->
+<div class="card">
+    <h3 class="page-title">নতুন মেরামত টিকিট তৈরি</h3>
+    <div class="form-group">
+        <label>গ্রাহকের নাম</label>
+        <input type="text" id="tCustName" placeholder="মামুনুর রশিদ">
+    </div>
+    <div class="form-group">
+        <label>ডিভাইসের ধরন ও মডেল</label>
+        <input type="text" id="tDevice" placeholder="যেমন: মোবাইল - রেডমি নোট 10">
+    </div>
+    <div class="form-group">
+        <label>সমস্যার বিবরণ</label>
+        <textarea id="tProblem" rows="2" placeholder="স্ক্রিন ভাঙ্গা / চার্জ হয় না ইত্যাদি"></textarea>
+    </div>
+    <div class="form-group">
+        <label>আনুমানিক খরচ (টাকা)</label>
+        <input type="number" id="tCost" min="0" placeholder="২৫০">
+    </div>
+    <div class="form-group">
+        <label>অগ্রিম গ্রহণ (টাকা)</label>
+        <input type="number" id="tAdvance" min="0" value="0" placeholder="১০০">
+    </div>
+    <button class="btn btn-primary no-print" onclick="addTicket()">✅ টিকিট সংরক্ষণ করুন</button>
+</div>
+
+<!-- টিকিট তালিকা -->
+<h3 class="page-title">টিকিট তালিকা</h3>
+<div id="ticketList">
+    <p class="card" style="text-align:center; opacity:0.8;">এখনো কোনো টিকিট তৈরি করা হয়নি</p>
+</div>
+
+<script>
+// সঠিক ভেরিয়েবল ও সংরক্ষণ স্থান
+const STORAGE_KEY = 'shop_repair_tickets';
+let tickets = [];
+
+// শুরু করার সময় ডেটা লোড
+document.addEventListener('DOMContentLoaded', () => {
+    loadTickets();
+    renderTickets();
+});
+
+// ডেটা লোড ও সেভ
+function loadTickets() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved) tickets = JSON.parse(saved);
 }
+function saveTickets() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+    renderTickets();
+}
+
+// নতুন টিকিট যুক্ত করা
+function addTicket() {
+    const name = document.getElementById('tCustName').value.trim();
+    const device = document.getElementById('tDevice').value.trim();
+    if(!name || !device) return alert('❌ গ্রাহকের নাম ও ডিভাইসের বিবরণ দিন!');
+    
+    tickets.unshift({
+        id: Date.now(),
+        custName: name,
+        device: device,
+        problem: document.getElementById('tProblem').value.trim() || 'উল্লেখ নেই',
+        cost: document.getElementById('tCost').value || '0',
+        advance: document.getElementById('tAdvance').value || '0',
+        date: new Date().toISOString()
+    });
+    
+    // ফর্ম খালি করা
+    document.getElementById('tCustName').value = '';
+    document.getElementById('tDevice').value = '';
+    document.getElementById('tProblem').value = '';
+    document.getElementById('tCost').value = '';
+    document.getElementById('tAdvance').value = '0';
+    
+    alert('✅ টিকিট সফলভাবে তৈরি হয়েছে!');
+    saveTickets();
+}
+
+// টিকিট তালিকা দেখানো
+function renderTickets() {
+    const listDiv = document.getElementById('ticketList');
+    if(tickets.length === 0) {
+        listDiv.innerHTML = '<p class="card" style="text-align:center; opacity:0.8;">এখনো কোনো টিকিট তৈরি করা হয়নি</p>';
+        return;
+    }
+    listDiv.innerHTML = tickets.map(t => `
+    <div class="list-item card">
+        <strong>${t.custName} - ${t.device}</strong>
+        <small>সমস্যা: ${t.problem}</small>
+        <small>আনুমানিক খরচ: ${t.cost} টাকা | অগ্রিম: ${t.advance} টাকা | বাকি: ${Number(t.cost)-Number(t.advance)} টাকা</small>
+        <div class="item-actions">
+            <button class="btn-small btn-primary no-print" onclick="printTicket(${t.id})">🖨️ প্রিন্ট</button>
+            <button class="btn-small btn-whatsapp no-print" onclick="sendToWhatsApp(${t.id})">💚 হোয়াটসঅ্যাপ</button>
+            <button class="btn-small btn-danger no-print" onclick="deleteTicket(${t.id})">মুছুন</button>
+        </div>
+    </div>`).join('');
+}
+
+// টিকিট মুছে ফেলা
+function deleteTicket(id) {
+    if(confirm('এই টিকিট স্থায়ীভাবে মুছে ফেলা নিশ্চিত?')) {
+        tickets = tickets.filter(t => t.id !== id);
+        saveTickets();
+    }
+}
+
+// ১. প্রিন্ট করা (এখানে ভুল সংশোধন)
+function printTicket(id) {
+    const t = tickets.find(x => x.id === id);
+    if(!t) return alert('❌ টিকিট পাওয়া যায়নি!');
+    const due = Number(t.cost) - Number(t.advance);
+    const printWin = window.open('', '_blank');
+    printWin.document.write(`
+    <html><head><title>মেরামত টিকিট</title><style>body{padding:25px; font-family:bangla,sans-serif; max-width:400px; margin:0 auto;}</style></head><body>
+        <h2 style="text-align:center; color:#0F4C81; border-bottom:2px dashed #333; padding-bottom:10px;">কম্পিউটার ও মেরামত সেবা কেন্দ্র</h2>
+        <h3 style="margin:15px 0 5px;">মেরামত টিকিট</h3>
+        <p><strong>গ্রাহকের নাম:</strong> ${t.custName}</p>
+        <p><strong>ডিভাইস:</strong> ${t.device}</p>
+        <p><strong>সমস্যা:</strong> ${t.problem}</p>
+        <p><strong>আনুমানিক খরচ:</strong> ${t.cost} টাকা</p>
+        <p><strong>অগ্রিম গ্রহণ:</strong> ${t.advance} টাকা</p>
+        <p><strong>বাকি প্রদেয়:</strong> ${due} টাকা</p>
+        <p><strong>তারিখ ও সময়:</strong> ${new Date(t.date).toLocaleString('bn-BD')}</p>
+        <hr style="border:1px dashed #999; margin:20px 0;">
+        <p style="text-align:right;">স্বাক্ষর: ____________________</p>
+    </body></html>`);
+    printWin.document.close();
+    setTimeout(() => printWin.print(), 500);
+}
+
+// ২. হোয়াটসঅ্যাপে পাঠানো (এখানেও ভুল সংশোধন)
+function sendToWhatsApp(id) {
+    const t = tickets.find(x => x.id === id);
+    if(!t) return alert('❌ টিকিট পাওয়া যায়নি!');
+    const due = Number(t.cost) - Number(t.advance);
+    const msg = encodeURIComponent(
+`হ্যালো ${t.custName},
+✅ আপনার মেরামত টিকিট নিশ্চিত করা হলো:
+📱 ডিভাইস: ${t.device}
+⚠️ সমস্যা: ${t.problem}
+💰 আনুমানিক খরচ: ${t.cost} টাকা
+💵 অগ্রিম নিয়েছি: ${t.advance} টাকা
+📝 বাকি দিতে হবে: ${due} টাকা
+🗓️ তারিখ: ${new Date(t.date).toLocaleString('bn-BD')}
+
+ধন্যবাদ আমাদের সেবা বেছে নেওয়ার জন্য!`
+    );
+    let num = prompt('গ্রাহকের নম্বর দিন (যেমন: 88017123456789):', '');
+    if(!num) return;
+    num = num.replace(/\D/g, '');
+    if(!num.startsWith('880')) num = '880' + num.replace(/^0+/, '');
+    window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+}
+</script>
+</body>
+</html>
