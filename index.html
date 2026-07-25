@@ -90,6 +90,25 @@
         .ticket-details { font-size:14px; color:#4B5563; line-height:1.6; }
         .ticket-actions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
 
+        /* প্রিন্টযোগ্য রশিদ */
+        .receipt-preview { display:none; padding:25px; background:white; max-width:320px; margin:0 auto; border:2px dashed #333; }
+        .receipt-head { text-align:center; margin-bottom:15px; border-bottom:1px dashed #333; padding-bottom:10px; }
+        .receipt-head h3 { font-size:18px; color:var(--primary); }
+        .receipt-body { font-size:13px; line-height:1.8; margin-bottom:15px; }
+        .receipt-body p { margin:4px 0; }
+        .receipt-foot { text-align:center; font-size:12px; border-top:1px dashed #333; padding-top:10px; margin-top:10px; }
+        .receipt-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow:auto; padding:20px; }
+        .receipt-modal.active { display:block; }
+        .receipt-buttons { text-align:center; margin:15px 0; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+        /* প্রিন্টের সময় শুধু রশিদ দেখাবে */
+        @media print {
+            body * { visibility:hidden; }
+            .receipt-preview, .receipt-preview * { visibility:visible; }
+            .receipt-preview { position:absolute; left:0; top:0; width:100%; border:none; max-width:100%; }
+            .receipt-modal, .receipt-buttons { display:none !important; }
+        }
+
         /* মোবাইল রেসপন্সিভ */
         @media (min-width:992px) {
             .menu-toggle { display:none; }
@@ -140,6 +159,15 @@
 </aside>
 <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
+<!-- রশিদ প্রিভিউ মোডাল -->
+<div class="receipt-modal" id="receiptModal">
+    <div class="receipt-preview" id="receiptContent"></div>
+    <div class="receipt-buttons">
+        <button class="btn btn-success" onclick="printReceipt()">🖨️ প্রিন্ট করুন</button>
+        <button class="btn btn-outline" onclick="closeReceipt()">❌ বন্ধ করুন</button>
+    </div>
+</div>
+
 <!-- মূল কন্টেন্ট -->
 <main class="main-content">
     <!-- ড্যাশবোর্ড পেজ -->
@@ -164,7 +192,7 @@
             <h2 class="page-title" style="margin:0;">🎟️ মেরামত টিকিট ব্যবস্থাপনা</h2>
             <div>
                 <button class="btn btn-primary" onclick="showPage('new-ticket')">➕ নতুন টিকিট</button>
-                <button class="btn btn-outline btn-sm">🖨️ লেবেল প্রিন্ট</button>
+                <button class="btn btn-outline btn-sm" onclick="printAllTickets()">🖨️ সব টিকিট প্রিন্ট</button>
                 <button class="btn btn-outline btn-sm">📲 মেসেজ পাঠান</button>
             </div>
         </div>
@@ -340,12 +368,14 @@ function renderTickets(filter = 'সব') {
                 <span class="status-badge ${getStatusClass(t.status)}">${t.status}</span>
             </div>
             <div class="ticket-details">
-                <strong>গ্রাহক:</strong> ${t.customer.name} | ফোন: ${t.customer.mobile}<br>
+                <strong>গ্রাহক:</strong> ${t.customer.name}<br>
+                <strong>ফোন:</strong> ${t.customer.mobile}<br>
+                ${t.customer.address ? `<strong>ঠিকানা:</strong> ${t.customer.address}<br>` : ''}
                 <strong>ডিভাইস:</strong> ${t.device.type} ${t.device.brand ? `- ${t.device.brand}` : ''} ${t.device.model || ''}<br>
-                ${t.device.serial ? `<strong>সিরিয়াল:</strong> ${t.device.serial}<br>` : ''}
-                <strong>আনা জিনিস:</strong> ${t.accessories.join(', ') || 'কিছুই নয়'}<br>
-                <strong>অগ্রিম জমা:</strong> ${t.advance} টাকা
-                ${t.problem ? `<br><strong>সমস্যা:</strong> ${t.problem}` : ''}
+                ${t.device.serial ? `<strong>সিরিয়াল/আইএমইআই:</strong> ${t.device.serial}<br>` : ''}
+                <strong>সাথে আনা জিনিস:</strong> ${t.accessories.join(', ') || 'কিছুই নয়'}<br>
+                <strong>অগ্রিম জমা:</strong> ${t.advance} টাকা<br>
+                ${t.problem ? `<strong>সমস্যা:</strong> ${t.problem}` : ''}
             </div>
             <div class="ticket-actions">
                 <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','জমা নেওয়া হয়েছে')">জমা নেওয়া</button>
@@ -354,6 +384,7 @@ function renderTickets(filter = 'সব') {
                 <button class="btn btn-sm btn-outline" onclick="changeStatus('${t.id}','ডেলিভারির জন্য প্রস্তুত')">প্রস্তুত করা</button>
                 <button class="btn btn-sm btn-success" onclick="changeStatus('${t.id}','ডেলিভারি দেওয়া হয়েছে')">ডেলিভারি দেওয়া</button>
                 <button class="btn btn-sm btn-danger" onclick="changeStatus('${t.id}','বাতিল/মেরামত অসম্ভব')">বাতিল</button>
+                <button class="btn btn-sm btn-primary" onclick="openReceipt('${t.id}')">🖨️ রশিদ প্রিন্ট</button>
             </div>
         </div>
     `).join('') : `
@@ -396,6 +427,58 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
         renderTickets(btn.dataset.filter);
     });
 });
+
+// রশিদ প্রিন্ট ফাংশন
+function openReceipt(ticketId) {
+    const ticket = tickets.find(t => t.id === ticketId);
+    if(!ticket) return;
+    
+    const receiptHTML = `
+        <div class="receipt-head">
+            <h3>কম্পিউটার ও মোবাইল মেরামত কেন্দ্র</h3>
+            <p>মেরামত রশিদ</p>
+        </div>
+        <div class="receipt-body">
+            <p><strong>টিকিট নম্বর:</strong> ${ticket.id}</p>
+            <p><strong>তারিখ ও সময়:</strong> ${ticket.date}</p>
+            <hr style="border:none; border-bottom:1px dashed #999; margin:5px 0;">
+            <p><strong>গ্রাহকের নাম:</strong> ${ticket.customer.name}</p>
+            <p><strong>মোবাইল নম্বর:</strong> ${ticket.customer.mobile}</p>
+            ${ticket.customer.address ? `<p><strong>ঠিকানা:</strong> ${ticket.customer.address}</p>` : ''}
+            <hr style="border:none; border-bottom:1px dashed #999; margin:5px 0;">
+            <p><strong>ডিভাইসের ধরন:</strong> ${ticket.device.type}</p>
+            <p><strong>ব্র্যান্ড ও মডেল:</strong> ${ticket.device.brand || ''} ${ticket.device.model || ''}</p>
+            ${ticket.device.serial ? `<p><strong>সিরিয়াল/আইএমইআই:</strong> ${ticket.device.serial}</p>` : ''}
+            <p><strong>সাথে আনা জিনিস:</strong> ${ticket.accessories.join(', ') || 'কিছুই নয়'}</p>
+            <p><strong>সমস্যার বিবরণ:</strong> ${ticket.problem || 'উল্লেখ নেই'}</p>
+            <p><strong>বর্তমান অবস্থা:</strong> ${ticket.status}</p>
+            <p><strong>অগ্রিম জমা টাকা:</strong> ${ticket.advance} টাকা</p>
+        </div>
+        <div class="receipt-foot">
+            <p>ধন্যবাদ আমাদের সেবা গ্রহণ করার জন্য</p>
+            <p>প্রয়োজনে যোগাযোগ করুন</p>
+        </div>
+    `;
+    
+    document.getElementById('receiptContent').innerHTML = receiptHTML;
+    document.getElementById('receiptModal').classList.add('active');
+}
+
+function closeReceipt() {
+    document.getElementById('receiptModal').classList.remove('active');
+}
+
+function printReceipt() {
+    window.print();
+}
+
+function printAllTickets() {
+    if(tickets.length === 0) {
+        alert('❌ প্রিন্ট করার মতো কোনো টিকিট নেই!');
+        return;
+    }
+    alert('✅ প্রথমে প্রয়োজনীয় টিকিটের পাশের "রশিদ প্রিন্ট" বাটন ব্যবহার করুন। পরবর্তীতে সব একসাথে প্রিন্ট করার সুবিধা যুক্ত করা হবে।');
+}
 
 // নেটওয়ার্ক অবস্থা পরিবর্তন
 function updateNetStatus() {
