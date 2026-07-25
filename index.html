@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0F4C81">
+    <title>Computer Shop Pro | সবকিছু এক জায়গায়</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Roboto,'Noto Sans Bengali',sans-serif; }
+        :root { --primary:#0F4C81; --primary-light:#1A73B9; --accent:#FF9F1C; --success:#2E933C; --danger:#E71D36; --light:#F8FBFE; --dark:#2D3748; --shadow:0 6px 16px rgba(15,76,129,0.12); --radius:14px; }
+        body { background:linear-gradient(180deg,#F0F5FA 0%,#E6EDF7 100%); min-height:100vh; padding:16px; color:var(--dark); }
+        .main-container { max-width:1200px; margin:0 auto; }
+        .brand-header { background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:white; padding:24px; border-radius:var(--radius); text-align:center; margin-bottom:24px; box-shadow:var(--shadow); }
+        .brand-header h1 { font-size:24px; margin-bottom:6px; }
+        .brand-header p { font-size:15px; opacity:0.92; }
+        .main-menu { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:24px; }
+        @media (min-width:600px) { .main-menu { grid-template-columns:repeat(3,1fr); } }
+        @media (min-width:900px) { .main-menu { grid-template-columns:repeat(4,1fr); } }
+        .menu-card { background:white; border-radius:var(--radius); padding:20px 12px; text-align:center; cursor:pointer; transition:all 0.35s ease; border-left:5px solid var(--primary); box-shadow:0 3px 10px rgba(0,0,0,0.05); }
+        .menu-card:hover { transform:translateY(-6px); box-shadow:0 10px 25px rgba(15,76,129,0.18); border-left-color:var(--accent); }
+        .menu-card .icon { font-size:32px; margin-bottom:10px; }
+        .menu-card h3 { font-size:15px; font-weight:600; margin-bottom:4px; }
+        .menu-card p { font-size:12px; color:#718096; }
+        .view-area { background:white; border-radius:var(--radius); padding:28px; box-shadow:var(--shadow); display:none; animation:slideUp 0.4s ease; }
+        @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .view-area.active { display:block; }
+        .view-area h2 { color:var(--primary); margin-bottom:18px; padding-bottom:10px; border-bottom:2px solid #E2E8F0; }
+        .form-group { margin-bottom:16px; }
+        .form-group label { display:block; font-weight:500; margin-bottom:6px; font-size:14px; }
+        .form-group input, .form-group select, .form-group textarea { width:100%; padding:12px 15px; border:1px solid #CBD5E0; border-radius:10px; font-size:15px; transition:border 0.3s; }
+        .form-group input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 4px rgba(15,76,129,0.1); }
+        .btn { padding:12px 24px; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; transition:0.3s; margin-right:10px; margin-top:8px; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-primary:hover { background:var(--primary-light); }
+        .btn-back { background:#E2E8F0; color:var(--dark); }
+        .btn-back:hover { background:#CBD5E0; }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <div class="brand-header">
+        <h1>💻 কম্পিউটার দোকান প্রফেশনাল ম্যানেজার</h1>
+        <p>মোবাইল • কম্পিউটার • ল্যাপটপ • প্রিন্টার — সম্পূর্ণ ব্যবস্থাপনা</p>
+    </div>
+    <div class="main-menu">
+        <div class="menu-card" onclick="openView('dashboard')">
+            <div class="icon">🏠</div><h3>ড্যাশবোর্ড</h3><p>এক নজরে সবকিছু</p>
+        </div>
+        <div class="menu-card" onclick="openView('stock')">
+            <div class="icon">📦</div><h3>স্টক ব্যবস্থাপনা</h3><p>পণ্য যুক্ত/পরিবর্তন</p>
+        </div>
+        <div class="menu-card" onclick="openView('repair')">
+            <div class="icon">🔧</div><h3>মেরামত টিকিট</h3><p>সার্ভিস ট্র্যাকিং</p>
+        </div>
+        <div class="menu-card" onclick="openView('billing')">
+            <div class="icon">🧾</div><h3>বিলিং ও বিক্রয়</h3><p>রশিদ ও হিসাব</p>
+        </div>
+    </div>
+    <div id="dashboard" class="view-area active">
+        <h2>🏠 আপনার ড্যাশবোর্ড</h2>
+        <p>✅ মোবাইল ও কম্পিউটারে স্বয়ংক্রিয়ভাবে সাজবে</p><br>
+        <p>✅ প্রফেশনাল ও নিরাপদ কাঠামো</p><br>
+        <p>✅ ধাপে ধাপে সব ফিচার যুক্ত করা হবে</p>
+    </div>
+    <div id="stock" class="view-area">
+        <h2>📦 নতুন পণ্য যুক্ত করুন</h2>
+        <div class="form-group"><label>পণ্যের নাম:</label><input type="text" placeholder="যেমন: 19 ইঞ্চি LED মনিটর"></div>
+        <div class="form-group"><label>ব্র্যান্ড ও মডেল:</label><input type="text" placeholder="যেমন: Dell / E1916HV"></div>
+        <div class="form-group"><label>ক্রয়মূল্য (টাকা):</label><input type="number" placeholder="০"></div>
+        <div class="form-group"><label>বিক্রয়মূল্য (টাকা):</label><input type="number" placeholder="০"></div>
+        <div class="form-group"><label>বর্তমান স্টক:</label><input type="number" placeholder="০"></div>
+        <button class="btn btn-primary">সংরক্ষণ করুন</button>
+        <button class="btn btn-back" onclick="backToHome()">ফিরে যান</button>
+    </div>
+    <div id="repair" class="view-area">
+        <h2>🔧 মেরামত টিকিট সিস্টেম</h2>
+        <p>এই অংশটি ধাপে ধাপে যুক্ত করা হবে।</p>
+        <button class="btn btn-back" onclick="backToHome()">ফিরে যান</button>
+    </div>
+    <div id="billing" class="view-area">
+        <h2>🧾 বিলিং ও রশিদ</h2>
+        <p>এই অংশটি ধাপে ধাপে যুক্ত করা হবে।</p>
+        <button class="btn btn-back" onclick="backToHome()">ফিরে যান</button>
+    </div>
+</div>
+<script>
+function openView(viewId) {
+    document.querySelectorAll('.view-area').forEach(view => view.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+}
+function backToHome() { openView('dashboard'); }
+</script>
+</body>
+</html>
