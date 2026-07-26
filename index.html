@@ -8,14 +8,14 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, 'Noto Sans Bengali', sans-serif; }
         :root {
-            --primary: #0F4C81; --success: #22C55E; --whatsapp: #25D366;
-            --warning: #F59E0B; --danger: #EF4444; --light: #F8FAFC;
-            --dark: #1E293B; --border: #E2E8F0; --radius: 10px;
+            --primary: #0F4C81; --primary-light: #1A73E8; --success: #22C55E; --whatsapp: #25D366;
+            --warning: #F59E0B; --danger: #EF4444; --light: #F8FAFC; --dark: #1E293B;
+            --border: #E2E8F0; --radius: 10px; --shadow: 0 4px 12px rgba(0,0,0,0.06);
         }
         [data-theme="dark"] { --light: #0F172A; --dark: #F8FAFC; --border: #334155; }
-        body { background: var(--light); color: var(--dark); min-height: 100vh; padding: 16px; }
+        body { background: var(--light); color: var(--dark); min-height: 100vh; padding-bottom: 20px; }
 
-        /* প্রিন্টের সময় শুধু টিকিট দেখাবে */
+        /* প্রিন্ট স্টাইল */
         @media print {
             body * { visibility: hidden; }
             .print-area, .print-area * { visibility: visible; }
@@ -23,176 +23,236 @@
             .no-print { display: none !important; }
         }
 
-        .page-title { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
-        .card { background: white; border-radius: var(--radius); box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 18px; margin-bottom: 16px; }
-        .btn { padding: 10px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; width: 100%; justify-content: center; margin: 6px 0; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-whatsapp { background: var(--whatsapp); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-small { width: auto; padding: 6px 10px; font-size: 12px; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-        label { font-size: 13px; font-weight: 600; color: #475569; }
-        input, textarea { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: transparent; color: var(--dark); }
-        .list-item { padding: 12px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
-        .item-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        /* শীর্ষবার ও মেনু */
+        .top-bar { position: sticky; top:0; background: var(--light); padding:12px 16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.05); z-index:990; }
+        .menu-btn { background: var(--primary); color:white; border:none; padding:8px 12px; border-radius:8px; font-size:18px; cursor:pointer; }
+        .sidebar { position:fixed; left:0; top:0; bottom:0; width:260px; background:white; box-shadow:2px 0 10px rgba(0,0,0,0.1); transform:translateX(-100%); transition:0.3s; z-index:995; padding-top:60px; overflow-y:auto; }
+        .sidebar.active { transform:translateX(0); }
+        .sidebar a { display:block; padding:12px 20px; color:var(--dark); text-decoration:none; font-size:15px; border-left:3px solid transparent; }
+        .sidebar a.active, .sidebar a:hover { background:rgba(15,76,129,0.08); border-left-color:var(--primary); color:var(--primary); }
+        .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:994; display:none; }
+        .overlay.active { display:block; }
+
+        /* পৃষ্ঠা ও কার্ড */
+        .page { display:none; padding:16px; max-width:700px; margin:0 auto; animation:fadeIn 0.3s; }
+        .page.active { display:block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        .page-title { font-size:20px; font-weight:700; color:var(--primary); margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid var(--border); }
+        .card { background:white; border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; margin-bottom:16px; }
+
+        /* ড্যাশবোর্ড */
+        .dash-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:20px; }
+        .dash-card { background:white; border-radius:var(--radius); padding:16px; text-align:center; box-shadow:var(--shadow); }
+        .dash-card h3 { font-size:24px; margin-bottom:4px; }
+        .dash-card p { font-size:14px; opacity:0.8; }
+
+        /* ফর্ম ও বাটন */
+        .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+        label { font-size:14px; font-weight:600; color:#475569; }
+        input, textarea { padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:15px; background:transparent; color:var(--dark); }
+        .btn { padding:10px 16px; border:none; border-radius:8px; font-size:15px; font-weight:500; cursor:pointer; width:100%; margin:6px 0; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-whatsapp { background:var(--whatsapp); color:white; }
+        .btn-danger { background:var(--danger); color:white; }
+        .btn-small { width:auto; padding:6px 10px; font-size:13px; }
+        .list-item { padding:12px; border-bottom:1px solid var(--border); margin-bottom:10px; }
+        .item-actions { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
     </style>
 </head>
 <body>
 
-<!-- টিকিট তৈরি ফর্ম -->
-<div class="card">
-    <h3 class="page-title">নতুন মেরামত টিকিট তৈরি</h3>
-    <div class="form-group">
-        <label>গ্রাহকের নাম</label>
-        <input type="text" id="tCustName" placeholder="মামুনুর রশিদ">
-    </div>
-    <div class="form-group">
-        <label>ডিভাইসের ধরন ও মডেল</label>
-        <input type="text" id="tDevice" placeholder="যেমন: মোবাইল - রেডমি নোট 10">
-    </div>
-    <div class="form-group">
-        <label>সমস্যার বিবরণ</label>
-        <textarea id="tProblem" rows="2" placeholder="স্ক্রিন ভাঙ্গা / চার্জ হয় না ইত্যাদি"></textarea>
-    </div>
-    <div class="form-group">
-        <label>আনুমানিক খরচ (টাকা)</label>
-        <input type="number" id="tCost" min="0" placeholder="২৫০">
-    </div>
-    <div class="form-group">
-        <label>অগ্রিম গ্রহণ (টাকা)</label>
-        <input type="number" id="tAdvance" min="0" value="0" placeholder="১০০">
-    </div>
-    <button class="btn btn-primary no-print" onclick="addTicket()">✅ টিকিট সংরক্ষণ করুন</button>
+<!-- শীর্ষবার -->
+<div class="top-bar no-print">
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <h2 id="pageName">মেরামত টিকিট</h2>
+</div>
+<div class="overlay no-print" onclick="toggleMenu()"></div>
+
+<!-- সাইডবার মেনু -->
+<div class="sidebar no-print" id="mainMenu">
+    <a href="#" data-p="dashboard" onclick="openPage('dashboard')">📊 ড্যাশবোর্ড</a>
+    <a href="#" data-p="ticket" class="active" onclick="openPage('ticket')">🔧 মেরামত টিকিট</a>
+    <a href="#" data-p="stock" onclick="openPage('stock')">📦 স্টক ও পার্টস</a>
+    <a href="#" data-p="customer" onclick="openPage('customer')">👥 গ্রাহক তালিকা</a>
+    <a href="#" data-p="income" onclick="openPage('income')">💰 আয় এন্ট্রি</a>
+    <a href="#" data-p="expense" onclick="openPage('expense')">💸 ব্যয় এন্ট্রি</a>
+    <a href="#" data-p="settings" onclick="openPage('settings')">⚙️ সেটিংস</a>
 </div>
 
-<!-- টিকিট তালিকা -->
-<h3 class="page-title">টিকিট তালিকা</h3>
-<div id="ticketList">
-    <p class="card" style="text-align:center; opacity:0.8;">এখনো কোনো টিকিট তৈরি করা হয়নি</p>
+<!-- ১. ড্যাশবোর্ড পৃষ্ঠা -->
+<div class="page" id="dashboard">
+    <h3 class="page-title">আজকের সারসংক্ষেপ</h3>
+    <div class="dash-grid">
+        <div class="dash-card"><h3 id="d-ticket">০</h3><p>মোট টিকিট</p></div>
+        <div class="dash-card"><h3 id="d-income">০ ৳</h3><p>মোট আয়</p></div>
+        <div class="dash-card"><h3 id="d-expense">০ ৳</h3><p>মোট ব্যয়</p></div>
+        <div class="dash-card"><h3 id="d-profit">০ ৳</h3><p>লাভ</p></div>
+    </div>
+    <div class="card">
+        <p style="text-align:center; opacity:0.8;">বাম উপরের ☰ বাটনে ক্লিক করে অন্য পৃষ্ঠায় যান</p>
+    </div>
 </div>
+
+<!-- ২. টিকিট পৃষ্ঠা -->
+<div class="page active" id="ticket">
+    <div class="card">
+        <h3 class="page-title">নতুন মেরামত টিকিট তৈরি</h3>
+        <div class="form-group">
+            <label>গ্রাহকের নাম</label>
+            <input type="text" id="tName">
+        </div>
+        <div class="form-group">
+            <label>ডিভাইসের ধরন ও মডেল</label>
+            <input type="text" id="tDevice">
+        </div>
+        <div class="form-group">
+            <label>সমস্যার বিবরণ</label>
+            <textarea id="tProblem" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+            <label>আনুমানিক খরচ (টাকা)</label>
+            <input type="number" id="tCost" min="0">
+        </div>
+        <div class="form-group">
+            <label>অগ্রিম গ্রহণ (টাকা)</label>
+            <input type="number" id="tAdvance" min="0" value="0">
+        </div>
+        <button class="btn btn-primary" onclick="addTicket()">✅ টিকিট সংরক্ষণ করুন</button>
+    </div>
+    <h3 class="page-title">টিকিট তালিকা</h3>
+    <div id="ticketList">
+        <div class="card" style="text-align:center; opacity:0.8;">এখনো কোনো টিকিট তৈরি করা হয়নি</div>
+    </div>
+</div>
+
+<!-- ৩. অন্য পৃষ্ঠা (সাময়িক) -->
+<div class="page" id="stock"><div class="card"><h3 class="page-title">স্টক ও পার্টস</h3><p style="opacity:0.8;">শীঘ্রই সম্পূর্ণ ফিচার যুক্ত করা হবে</p></div></div>
+<div class="page" id="customer"><div class="card"><h3 class="page-title">গ্রাহক তালিকা</h3><p style="opacity:0.8;">শীঘ্রই সম্পূর্ণ ফিচার যুক্ত করা হবে</p></div></div>
+<div class="page" id="income"><div class="card"><h3 class="page-title">আয় এন্ট্রি</h3><p style="opacity:0.8;">শীঘ্রই সম্পূর্ণ ফিচার যুক্ত করা হবে</p></div></div>
+<div class="page" id="expense"><div class="card"><h3 class="page-title">ব্যয় এন্ট্রি</h3><p style="opacity:0.8;">শীঘ্রই সম্পূর্ণ ফিচার যুক্ত করা হবে</p></div></div>
+<div class="page" id="settings"><div class="card"><h3 class="page-title">সেটিংস</h3><button class="btn btn-primary" onclick="downloadBackup()">💾 ব্যাকআপ ফাইল নিন</button></div></div>
 
 <script>
-// সঠিক ভেরিয়েবল ও সংরক্ষণ স্থান
-const STORAGE_KEY = 'shop_repair_tickets';
-let tickets = [];
+// ডেটা সংরক্ষণ
+const KEY = 'shop_full_data';
+let data = { ticket:[], income:0, expense:0 };
 
-// শুরু করার সময় ডেটা লোড
+// শুরুতে লোড
 document.addEventListener('DOMContentLoaded', () => {
-    loadTickets();
+    const old = localStorage.getItem(KEY);
+    if(old) data = JSON.parse(old);
     renderTickets();
+    updateDash();
 });
 
-// ডেটা লোড ও সেভ
-function loadTickets() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if(saved) tickets = JSON.parse(saved);
+// মেনু ও পৃষ্ঠা পরিবর্তন
+function toggleMenu() {
+    document.getElementById('mainMenu').classList.toggle('active');
+    document.querySelector('.overlay').classList.toggle('active');
 }
-function saveTickets() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
-    renderTickets();
+function openPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+    document.querySelector(`[data-p="${id}"]`).classList.add('active');
+    const names = {dashboard:'ড্যাশবোর্ড', ticket:'মেরামত টিকিট', stock:'স্টক', customer:'গ্রাহক', income:'আয়', expense:'ব্যয়', settings:'সেটিংস'};
+    document.getElementById('pageName').innerText = names[id];
+    toggleMenu();
 }
 
-// নতুন টিকিট যুক্ত করা
+// ড্যাশবোর্ড আপডেট
+function updateDash() {
+    document.getElementById('d-ticket').innerText = data.ticket.length;
+    document.getElementById('d-income').innerText = data.income+' ৳';
+    document.getElementById('d-expense').innerText = data.expense+' ৳';
+    document.getElementById('d-profit').innerText = (data.income - data.expense)+' ৳';
+}
+
+// টিকিট যুক্ত করা
 function addTicket() {
-    const name = document.getElementById('tCustName').value.trim();
-    const device = document.getElementById('tDevice').value.trim();
-    if(!name || !device) return alert('❌ গ্রাহকের নাম ও ডিভাইসের বিবরণ দিন!');
-    
-    tickets.unshift({
-        id: Date.now(),
-        custName: name,
-        device: device,
-        problem: document.getElementById('tProblem').value.trim() || 'উল্লেখ নেই',
-        cost: document.getElementById('tCost').value || '0',
-        advance: document.getElementById('tAdvance').value || '0',
-        date: new Date().toISOString()
+    const n = document.getElementById('tName').value.trim();
+    const d = document.getElementById('tDevice').value.trim();
+    if(!n || !d) return alert('❌ নাম ও ডিভাইসের বিবরণ দিন!');
+    data.ticket.unshift({
+        id:Date.now(), name:n, device:d, problem:document.getElementById('tProblem').value||'উল্লেখ নেই',
+        cost:document.getElementById('tCost').value||0, advance:document.getElementById('tAdvance').value||0, date:new Date().toISOString()
     });
-    
-    // ফর্ম খালি করা
-    document.getElementById('tCustName').value = '';
-    document.getElementById('tDevice').value = '';
-    document.getElementById('tProblem').value = '';
-    document.getElementById('tCost').value = '';
-    document.getElementById('tAdvance').value = '0';
-    
-    alert('✅ টিকিট সফলভাবে তৈরি হয়েছে!');
-    saveTickets();
+    localStorage.setItem(KEY, JSON.stringify(data));
+    alert('✅ টিকিট সংরক্ষিত!');
+    document.querySelectorAll('input, textarea').forEach(i => i.value='');
+    renderTickets(); updateDash();
 }
 
 // টিকিট তালিকা দেখানো
 function renderTickets() {
-    const listDiv = document.getElementById('ticketList');
-    if(tickets.length === 0) {
-        listDiv.innerHTML = '<p class="card" style="text-align:center; opacity:0.8;">এখনো কোনো টিকিট তৈরি করা হয়নি</p>';
-        return;
-    }
-    listDiv.innerHTML = tickets.map(t => `
+    const list = document.getElementById('ticketList');
+    if(!data.ticket.length) return list.innerHTML = '<div class="card" style="text-align:center; opacity:0.8;">এখনো কোনো টিকিট তৈরি করা হয়নি</div>';
+    list.innerHTML = data.ticket.map(t => `
     <div class="list-item card">
-        <strong>${t.custName} - ${t.device}</strong>
-        <small>সমস্যা: ${t.problem}</small>
-        <small>আনুমানিক খরচ: ${t.cost} টাকা | অগ্রিম: ${t.advance} টাকা | বাকি: ${Number(t.cost)-Number(t.advance)} টাকা</small>
+        <strong>${t.name} - ${t.device}</strong>
+        <p style="font-size:14px; opacity:0.8;">সমস্যা: ${t.problem}</p>
+        <p style="font-size:14px;">খরচ: ${t.cost} ৳ | অগ্রিম: ${t.advance} ৳ | বাকি: ${Number(t.cost)-Number(t.advance)} ৳</p>
         <div class="item-actions">
-            <button class="btn-small btn-primary no-print" onclick="printTicket(${t.id})">🖨️ প্রিন্ট</button>
-            <button class="btn-small btn-whatsapp no-print" onclick="sendToWhatsApp(${t.id})">💚 হোয়াটসঅ্যাপ</button>
-            <button class="btn-small btn-danger no-print" onclick="deleteTicket(${t.id})">মুছুন</button>
+            <button class="btn-small btn-primary" onclick="printT(${t.id})">🖨️ প্রিন্ট</button>
+            <button class="btn-small btn-whatsapp" onclick="waT(${t.id})">💚 হোয়াটসঅ্যাপ</button>
+            <button class="btn-small btn-danger" onclick="delT(${t.id})">মুছুন</button>
         </div>
     </div>`).join('');
 }
 
-// টিকিট মুছে ফেলা
-function deleteTicket(id) {
-    if(confirm('এই টিকিট স্থায়ীভাবে মুছে ফেলা নিশ্চিত?')) {
-        tickets = tickets.filter(t => t.id !== id);
-        saveTickets();
+// টিকিট মুছুন
+function delT(id) {
+    if(confirm('এটি মুছে ফেলা নিশ্চিত?')) {
+        data.ticket = data.ticket.filter(t => t.id !== id);
+        localStorage.setItem(KEY, JSON.stringify(data));
+        renderTickets(); updateDash();
     }
 }
 
-// ১. প্রিন্ট করা (এখানে ভুল সংশোধন)
-function printTicket(id) {
-    const t = tickets.find(x => x.id === id);
-    if(!t) return alert('❌ টিকিট পাওয়া যায়নি!');
-    const due = Number(t.cost) - Number(t.advance);
-    const printWin = window.open('', '_blank');
-    printWin.document.write(`
-    <html><head><title>মেরামত টিকিট</title><style>body{padding:25px; font-family:bangla,sans-serif; max-width:400px; margin:0 auto;}</style></head><body>
-        <h2 style="text-align:center; color:#0F4C81; border-bottom:2px dashed #333; padding-bottom:10px;">কম্পিউটার ও মেরামত সেবা কেন্দ্র</h2>
-        <h3 style="margin:15px 0 5px;">মেরামত টিকিট</h3>
-        <p><strong>গ্রাহকের নাম:</strong> ${t.custName}</p>
-        <p><strong>ডিভাইস:</strong> ${t.device}</p>
-        <p><strong>সমস্যা:</strong> ${t.problem}</p>
-        <p><strong>আনুমানিক খরচ:</strong> ${t.cost} টাকা</p>
-        <p><strong>অগ্রিম গ্রহণ:</strong> ${t.advance} টাকা</p>
-        <p><strong>বাকি প্রদেয়:</strong> ${due} টাকা</p>
-        <p><strong>তারিখ ও সময়:</strong> ${new Date(t.date).toLocaleString('bn-BD')}</p>
-        <hr style="border:1px dashed #999; margin:20px 0;">
-        <p style="text-align:right;">স্বাক্ষর: ____________________</p>
+// প্রিন্ট
+function printT(id) {
+    const t = data.ticket.find(x => x.id === id);
+    if(!t) return alert('❌ পাওয়া যায়নি!');
+    const due = Number(t.cost)-Number(t.advance);
+    const w = window.open('','_blank');
+    w.document.write(`<html><head><title>টিকিট</title></head><body style="padding:25px; font-family:bangla;">
+    <h2 style="text-align:center; border-bottom:2px dashed #333; padding-bottom:10px;">কম্পিউটার ও মেরামত সেবা</h2>
+    <h3>মেরামত টিকিট</h3>
+    <p>গ্রাহকের নাম: ${t.name}</p>
+    <p>ডিভাইস: ${t.device}</p>
+    <p>সমস্যা: ${t.problem}</p>
+    <p>আনুমানিক খরচ: ${t.cost} টাকা</p>
+    <p>অগ্রিম গ্রহণ: ${t.advance} টাকা</p>
+    <p>বাকি প্রদেয়: ${due} টাকা</p>
+    <p>তারিখ: ${new Date(t.date).toLocaleString('bn-BD')}</p>
+    <hr style="margin:20px 0; border:1px dashed #999;">
+    <p style="text-align:right;">স্বাক্ষর: _______________</p>
     </body></html>`);
-    printWin.document.close();
-    setTimeout(() => printWin.print(), 500);
+    w.document.close();
+    setTimeout(()=>w.print(), 500);
 }
 
-// ২. হোয়াটসঅ্যাপে পাঠানো (এখানেও ভুল সংশোধন)
-function sendToWhatsApp(id) {
-    const t = tickets.find(x => x.id === id);
-    if(!t) return alert('❌ টিকিট পাওয়া যায়নি!');
-    const due = Number(t.cost) - Number(t.advance);
-    const msg = encodeURIComponent(
-`হ্যালো ${t.custName},
-✅ আপনার মেরামত টিকিট নিশ্চিত করা হলো:
-📱 ডিভাইস: ${t.device}
-⚠️ সমস্যা: ${t.problem}
-💰 আনুমানিক খরচ: ${t.cost} টাকা
-💵 অগ্রিম নিয়েছি: ${t.advance} টাকা
-📝 বাকি দিতে হবে: ${due} টাকা
-🗓️ তারিখ: ${new Date(t.date).toLocaleString('bn-BD')}
-
-ধন্যবাদ আমাদের সেবা বেছে নেওয়ার জন্য!`
-    );
-    let num = prompt('গ্রাহকের নম্বর দিন (যেমন: 88017123456789):', '');
+// হোয়াটসঅ্যাপ
+function waT(id) {
+    const t = data.ticket.find(x => x.id === id);
+    if(!t) return alert('❌ পাওয়া যায়নি!');
+    const due = Number(t.cost)-Number(t.advance);
+    const msg = encodeURIComponent(`হ্যালো ${t.name}, আপনার টিকিট নিশ্চিত: ডিভাইস: ${t.device}, সমস্যা: ${t.problem}, খরচ: ${t.cost} টাকা, অগ্রিম: ${t.advance} টাকা, বাকি: ${due} টাকা। ধন্যবাদ!`);
+    let num = prompt('নম্বর দিন (88017XXXXXXXX):','');
     if(!num) return;
-    num = num.replace(/\D/g, '');
-    if(!num.startsWith('880')) num = '880' + num.replace(/^0+/, '');
-    window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+    num = num.replace(/\D/g,'');
+    if(!num.startsWith('880')) num = '880'+num.replace(/^0+/,'');
+    window.open(`https://wa.me/${num}?text=${msg}`,'_blank');
+}
+
+// ব্যাকআপ
+function downloadBackup() {
+    const b = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a');
+    a.href = u; a.download = `backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(u);
+    alert('✅ ব্যাকআপ ডাউনলোড হয়েছে!');
 }
 </script>
 </body>
