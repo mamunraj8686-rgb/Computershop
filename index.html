@@ -54,14 +54,20 @@
         <input type="text" id="tCustName" placeholder="উদাহরণ: ফাজিল আহমেদ" required>
     </div>
 
+    <!-- নতুন যুক্ত করা হয়েছে -->
+    <div class="form-group">
+        <label for="tMobile">গ্রাহকের মোবাইল নম্বর</label>
+        <input type="tel" id="tMobile" placeholder="উদাহরণ: 017XXXXXXXX বা 88017XXXXXXXX">
+    </div>
+
     <div class="form-group">
         <label for="tDevice">ডিভাইসের ধরন ও মডেল</label>
-        <input type="text" id="tDevice" placeholder="উদাহরণ: ল্যাপটপ - ডেল ইন্সপিরন 3501" required>
+        <input type="text" id="tDevice" placeholder="উদাহরণ: মোবাইল - স্যামসাং গ্যালাক্সি A12" required>
     </div>
 
     <div class="form-group">
         <label for="tProblem">সমস্যার বিবরণ</label>
-        <textarea id="tProblem" rows="3" placeholder="উদাহরণ: চালু হয় না, চার্জ পোর্ট নষ্ট"></textarea>
+        <textarea id="tProblem" rows="3" placeholder="উদাহরণ: স্ক্রিন ভাঙ্গা, চার্জ হয় না"></textarea>
     </div>
 
     <div class="form-group">
@@ -86,13 +92,11 @@
 const STORAGE_KEY = 'repair_ticket_system';
 let tickets = [];
 
-// শুরুতে ডেটা লোড
 document.addEventListener('DOMContentLoaded', () => {
     loadTickets();
     showTickets();
 });
 
-// সংরক্ষণ ও লোড
 function loadTickets() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if(saved) tickets = JSON.parse(saved);
@@ -101,24 +105,22 @@ function saveToStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
 }
 
-// নতুন টিকিট সংরক্ষণ (এখানে সব id ঠিক করা হয়েছে)
 function saveTicket() {
-    // সঠিক আইডি দিয়ে মান নিচ্ছি
     const custName = document.getElementById('tCustName').value.trim();
+    const mobile = document.getElementById('tMobile').value.trim();
     const device = document.getElementById('tDevice').value.trim();
     const problem = document.getElementById('tProblem').value.trim() || 'উল্লেখ নেই';
     const cost = document.getElementById('tCost').value.trim();
     const advance = document.getElementById('tAdvance').value.trim() || '0';
 
-    // প্রয়োজনীয় তথ্য চেক
     if(!custName) return alert('⚠️ দয়া করে গ্রাহকের নাম লিখুন!');
     if(!device) return alert('⚠️ দয়া করে ডিভাইসের বিবরণ লিখুন!');
     if(!cost) return alert('⚠️ দয়া করে আনুমানিক খরচ লিখুন!');
 
-    // নতুন টিকিট যুক্ত
     tickets.unshift({
         id: Date.now(),
         custName: custName,
+        mobile: mobile,
         device: device,
         problem: problem,
         cost: cost,
@@ -126,8 +128,8 @@ function saveTicket() {
         date: new Date().toISOString()
     });
 
-    // ফর্ম খালি করা
     document.getElementById('tCustName').value = '';
+    document.getElementById('tMobile').value = '';
     document.getElementById('tDevice').value = '';
     document.getElementById('tProblem').value = '';
     document.getElementById('tCost').value = '';
@@ -138,7 +140,6 @@ function saveTicket() {
     alert('✅ টিকিট সফলভাবে সংরক্ষণ করা হয়েছে!');
 }
 
-// টিকিট তালিকা দেখানো
 function showTickets() {
     const listDiv = document.getElementById('ticketList');
     if(tickets.length === 0) {
@@ -149,7 +150,7 @@ function showTickets() {
         const due = Number(t.cost) - Number(t.advance);
         return `
         <div class="list-item">
-            <strong>${t.custName} — ${t.device}</strong>
+            <strong>${t.custName} ${t.mobile ? `— ${t.mobile}` : ''} — ${t.device}</strong>
             <small>সমস্যা: ${t.problem}</small>
             <small>মোট খরচ: ${t.cost} টাকা | অগ্রিম: ${t.advance} টাকা | বাকি: ${due} টাকা</small>
             <small>তারিখ: ${new Date(t.date).toLocaleString('bn-BD')}</small>
@@ -162,7 +163,6 @@ function showTickets() {
     }).join('');
 }
 
-// টিকিট মুছে ফেলা
 function deleteThis(id) {
     if(confirm('এই টিকিট স্থায়ীভাবে মুছে ফেলা নিশ্চিত করছেন?')) {
         tickets = tickets.filter(t => t.id !== id);
@@ -171,7 +171,6 @@ function deleteThis(id) {
     }
 }
 
-// প্রিন্ট ফাংশন
 function printThis(id) {
     const t = tickets.find(x => x.id === id);
     if(!t) return alert('❌ টিকিট পাওয়া যায়নি!');
@@ -182,6 +181,7 @@ function printThis(id) {
         <h2 style="text-align:center; color:#0F4C81; border-bottom: 2px dashed #333; padding-bottom:10px;">কম্পিউটার ও মেরামত সেবা কেন্দ্র</h2>
         <h3 style="margin:15px 0 8px;">মেরামত টিকিট</h3>
         <p><strong>গ্রাহকের নাম:</strong> ${t.custName}</p>
+        ${t.mobile ? `<p><strong>মোবাইল নম্বর:</strong> ${t.mobile}</p>` : ''}
         <p><strong>ডিভাইসের বিবরণ:</strong> ${t.device}</p>
         <p><strong>সমস্যার বিবরণ:</strong> ${t.problem}</p>
         <p><strong>আনুমানিক খরচ:</strong> ${t.cost} টাকা</p>
@@ -195,11 +195,16 @@ function printThis(id) {
     setTimeout(() => printWin.print(), 600);
 }
 
-// হোয়াটসঅ্যাপ পাঠানো
 function sendWA(id) {
     const t = tickets.find(x => x.id === id);
     if(!t) return alert('❌ টিকিট পাওয়া যায়নি!');
     const due = Number(t.cost) - Number(t.advance);
+    let number = t.mobile;
+    if(!number) number = prompt('গ্রাহকের মোবাইল নম্বর দিন (যেমন: 88017XXXXXXXX):', '');
+    if(!number) return;
+    number = number.replace(/\D/g, '');
+    if(!number.startsWith('880')) number = '880' + number.replace(/^0+/, '');
+
     const message = encodeURIComponent(`হ্যালো ${t.custName}, আপনার মেরামত টিকিট নিশ্চিত করা হলো:
 ✅ ডিভাইস: ${t.device}
 ✅ সমস্যা: ${t.problem}
@@ -208,10 +213,6 @@ function sendWA(id) {
 ✅ বাকি দিতে হবে: ${due} টাকা
 
 দ্রুত যোগাযোগ রাখুন, ধন্যবাদ!`);
-    let number = prompt('গ্রাহকের মোবাইল নম্বর দিন (যেমন: 88017123456789):', '');
-    if(!number) return;
-    number = number.replace(/\D/g, '');
-    if(!number.startsWith('880')) number = '880' + number.replace(/^0+/, '');
     window.open(`https://wa.me/${number}?text=${message}`, '_blank');
 }
 </script>
